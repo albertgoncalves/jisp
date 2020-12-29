@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+if [ "$(uname -s)" = "Linux" ]; then
+    alias open="xdg-open"
+fi
+
+export WD=$PWD
+
+if [ ! -d "$WD/bin" ]; then
+    mkdir "$WD/bin"
+fi
+
+now () {
+    date +%s.%N
+}
+
+export -f now
+
+flags=(
+    "-fshort-enums"
+    "-fsingle-precision-constant"
+    "-march=native"
+    "-O1"
+    "-Wall"
+    "-Wcast-align"
+    "-Wcast-align=strict"
+    "-Wcast-qual"
+    "-Wconversion"
+    "-Wdate-time"
+    "-Wdouble-promotion"
+    "-Wduplicated-branches"
+    "-Wduplicated-cond"
+    "-Werror"
+    "-Wextra"
+    "-Wfatal-errors"
+    "-Wfloat-equal"
+    "-Wformat=2"
+    "-Wformat-signedness"
+    "-Winline"
+    "-Wlogical-op"
+    "-Wmissing-declarations"
+    "-Wmissing-include-dirs"
+    "-Wnull-dereference"
+    "-Wpacked"
+    "-Wpedantic"
+    "-Wpointer-arith"
+    "-Wredundant-decls"
+    "-Wshadow"
+    "-Wstack-protector"
+    "-Wswitch-enum"
+    "-Wtrampolines"
+    "-Wundef"
+    "-Wunused"
+    "-Wunused-macros"
+    "-Wwrite-strings"
+)
+
+export FLAGS="${flags[*]}"
+
+alias shellcheck="shellcheck --exclude=SC2153"

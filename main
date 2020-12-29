@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+read -r -a flags <<< "$FLAGS"
+
+for x in "$WD"/src/*.h; do
+    cppcheck "$x" | sed 's/\/.*\/\(.*\) \.\.\./\1/g'
+done
+cppcheck \
+    --enable=all \
+    --suppress=missingIncludeSystem \
+    "$WD/src" \
+    | sed 's/\/.*\/\(.*\) \.\.\./\1/g'
+clang-format -i -verbose "$WD/src"/*.c 2>&1 | sed 's/\/.*\///g'
+clang-format -i -verbose "$WD/src"/*.h 2>&1 | sed 's/\/.*\///g'
+
+start=$(now)
+gcc -g -o "$WD/bin/main" "${flags[@]}" "$WD/src/main.c"
+end=$(now)
+python3 -c "print(\"Compiled! ({:.3f}s)\n\".format(${end} - ${start}))"
+
+"$WD/bin/main"
