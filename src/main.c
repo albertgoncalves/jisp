@@ -33,7 +33,7 @@ i32 main(void) {
         ERROR("mprotect");
     }
     {
-        JitFn jit_fn = *(JitFn*)&program;
+        JitFn jit_fn = *((JitFn*)&program);
         printf("%d\n", jit_fn());
     }
     if (munmap(program, SIZE_PROGRAM)) {
