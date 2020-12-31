@@ -16,15 +16,15 @@ typedef enum {
     TRUE,
 } Bool;
 
-#define ERROR(x)                     \
-    {                                \
-        fprintf(stderr,              \
-                "%s:%s:%d \"%s\"\n", \
-                __FILE__,            \
-                __func__,            \
-                __LINE__,            \
-                x);                  \
-        exit(EXIT_FAILURE);          \
+#define EXIT_IF(condition)         \
+    if (condition) {               \
+        fprintf(stderr,            \
+                "%s:%s:%d `%s`\n", \
+                __FILE__,          \
+                __func__,          \
+                __LINE__,          \
+                #condition);       \
+        exit(EXIT_FAILURE);        \
     }
 
 #endif

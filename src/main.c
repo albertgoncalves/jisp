@@ -24,18 +24,14 @@ typedef enum {
 typedef i32 (*JitFn)(void);
 
 static void emit_op_code(Memory* memory, OpCode op_code) {
-    if (SIZE_BUFFER <= memory->buffer_index) {
-        ERROR("emit_op_code");
-    }
+    EXIT_IF(SIZE_BUFFER <= memory->buffer_index);
     memory->buffer[memory->buffer_index++] = op_code;
 }
 
 static void emit_i32(Memory* memory, i32 value) {
     usize n = sizeof(i32);
     usize index = memory->buffer_index + n;
-    if (SIZE_BUFFER < index) {
-        ERROR("emit_i32");
-    }
+    EXIT_IF(SIZE_BUFFER < index);
     memcpy(&memory->buffer[memory->buffer_index], &value, n);
     memory->buffer_index = index;
 }
@@ -48,13 +44,9 @@ static Program transform(Memory* memory) {
                           MAP_ANONYMOUS | MAP_PRIVATE,
                           -1,
                           0);
-    if (program.buffer == MAP_FAILED) {
-        ERROR("mmap");
-    }
+    EXIT_IF(program.buffer == MAP_FAILED);
     memcpy(program.buffer, &memory->buffer, memory->buffer_index);
-    if (mprotect(program.buffer, memory->buffer_index, PROT_EXEC)) {
-        ERROR("mprotect");
-    }
+    EXIT_IF(mprotect(program.buffer, memory->buffer_index, PROT_EXEC));
     return program;
 }
 
@@ -65,9 +57,7 @@ i32 main(void) {
            sizeof(Memory),
            sizeof(Program));
     Memory* memory = calloc(1, sizeof(Memory));
-    if (!memory) {
-        ERROR("calloc");
-    }
+    EXIT_IF(!memory);
     i32 x = 42;
     {
         emit_op_code(memory, OP_MOV_EAX);
@@ -78,14 +68,10 @@ i32 main(void) {
         Program program = transform(memory);
         {
             i32 return_value = (*((JitFn*)&program.buffer))();
-            if (return_value != x) {
-                ERROR("return_value");
-            }
+            EXIT_IF(return_value != x);
             printf("%d\n", return_value);
         }
-        if (munmap(program.buffer, memory->buffer_index)) {
-            ERROR("munmap");
-        }
+        EXIT_IF(munmap(program.buffer, memory->buffer_index));
     }
     free(memory);
     return EXIT_SUCCESS;
