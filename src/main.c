@@ -29,10 +29,9 @@ static void emit_op_code(Memory* memory, OpCode op_code) {
 }
 
 static void emit_i32(Memory* memory, i32 value) {
-    usize n = sizeof(i32);
-    usize index = memory->buffer_index + n;
+    usize index = memory->buffer_index + sizeof(i32);
     EXIT_IF(SIZE_BUFFER < index);
-    memcpy(&memory->buffer[memory->buffer_index], &value, n);
+    memcpy(&memory->buffer[memory->buffer_index], &value, sizeof(i32));
     memory->buffer_index = index;
 }
 
@@ -68,7 +67,7 @@ i32 main(void) {
         Program program = transform(memory);
         {
             i32 return_value = (*((JitFn*)&program.buffer))();
-            EXIT_IF(return_value != x);
+            EXIT_IF(x != return_value);
             printf("%d\n", return_value);
         }
         EXIT_IF(munmap(program.buffer, memory->buffer_index));
