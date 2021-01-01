@@ -16,24 +16,34 @@ typedef struct {
     void* buffer;
 } Program;
 
-typedef enum {
-    OP_MOV_EAX = 0xB8,
-    OP_RET = 0xC3,
-} OpCode;
+typedef i32 (*FnVoidI32)(void);
 
-typedef i32 (*JitFn)(void);
+#define EMIT_1_BYTE(fn, x)                            \
+    static void fn(Memory* memory) {                  \
+        EXIT_IF(SIZE_BUFFER <= memory->buffer_index); \
+        memory->buffer[memory->buffer_index++] = x;   \
+    }
 
-static void emit_op_code(Memory* memory, OpCode op_code) {
-    EXIT_IF(SIZE_BUFFER <= memory->buffer_index);
-    memory->buffer[memory->buffer_index++] = op_code;
-}
+#define EMIT_2_BYTES(fn, a, b)                             \
+    static void fn(Memory* memory) {                       \
+        EXIT_IF(SIZE_BUFFER < (memory->buffer_index + 2)); \
+        memory->buffer[memory->buffer_index++] = a;        \
+        memory->buffer[memory->buffer_index++] = b;        \
+    }
 
-static void emit_i32(Memory* memory, i32 value) {
-    usize index = memory->buffer_index + sizeof(i32);
-    EXIT_IF(SIZE_BUFFER < index);
-    memcpy(&memory->buffer[memory->buffer_index], &value, sizeof(i32));
-    memory->buffer_index = index;
-}
+#define EMIT_1_VAR(fn, type)                                                 \
+    static void fn(Memory* memory, type value) {                             \
+        EXIT_IF(SIZE_BUFFER < (memory->buffer_index + sizeof(type)));        \
+        memcpy(&memory->buffer[memory->buffer_index], &value, sizeof(type)); \
+        memory->buffer_index += sizeof(type);                                \
+    }
+
+EMIT_1_BYTE(emit_mov_ebx_imm32, 0xBB)
+EMIT_1_BYTE(emit_push_rbx, 0x53)
+EMIT_1_BYTE(emit_pop_rbx, 0x5B)
+EMIT_1_BYTE(emit_ret, 0xC3)
+EMIT_2_BYTES(emit_mov_eax_ebx, 0x89, 0xD8)
+EMIT_1_VAR(emit_i32, i32)
 
 static Program transform(Memory* memory) {
     Program program = {0};
@@ -50,25 +60,30 @@ static Program transform(Memory* memory) {
 }
 
 i32 main(void) {
-    printf("sizeof(Memory)  : %zu\n"
+    printf("sizeof(i32)     : %zu\n"
+           "sizeof(Memory)  : %zu\n"
            "sizeof(Program) : %zu\n"
            "\n",
+           sizeof(i32),
            sizeof(Memory),
            sizeof(Program));
     Memory* memory = calloc(1, sizeof(Memory));
     EXIT_IF(!memory);
     i32 x = 42;
     {
-        emit_op_code(memory, OP_MOV_EAX);
+        emit_push_rbx(memory);
+        emit_mov_ebx_imm32(memory);
         emit_i32(memory, x);
-        emit_op_code(memory, OP_RET);
+        emit_mov_eax_ebx(memory);
+        emit_pop_rbx(memory);
+        emit_ret(memory);
     }
     {
         Program program = transform(memory);
         {
-            i32 return_value = (*((JitFn*)&program.buffer))();
-            EXIT_IF(x != return_value);
+            i32 return_value = (*((FnVoidI32*)&program.buffer))();
             printf("%d\n", return_value);
+            EXIT_IF(x != return_value);
         }
         EXIT_IF(munmap(program.buffer, memory->buffer_index));
     }
