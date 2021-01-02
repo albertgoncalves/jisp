@@ -1,8 +1,9 @@
 #include "prelude.h"
 
 /* NOTE: Useful resources:
- * `https://bernsteinbear.com/blog/compiling-a-lisp-1/`
+ * `https://bernsteinbear.com/blog/lisp/`
  * `http://cs.brown.edu/courses/cs033/docs/guides/x64_cheatsheet.pdf`
+ * `https://software.intel.com/content/www/us/en/develop/articles/intel-sdm.html`
  */
 
 #include <string.h>
