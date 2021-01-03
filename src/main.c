@@ -62,7 +62,7 @@ EMIT_1_BYTE(emit_mov_eax_imm32, 0xB8)
 EMIT_1_BYTE(emit_mov_edi_imm32, 0xBF)
 EMIT_1_BYTE(emit_push_rbx, 0x53)
 EMIT_1_BYTE(emit_pop_rbx, 0x5B)
-EMIT_1_BYTE(emit_call, 0xE8)
+EMIT_1_BYTE(emit_call_rel_imm32, 0xE8)
 EMIT_1_BYTE(emit_ret, 0xC3)
 EMIT_2_BYTES(emit_mov_eax_ebx, 0x89, 0xD8)
 EMIT_2_BYTES(emit_mov_ebx_edi, 0x89, 0xFB)
@@ -85,13 +85,13 @@ i32 main(void) {
          *     -10-     ret
          *     -11-     mov     eax, `x + 1` ; NOTE: Never evaluated!
          */
-        emit_mov_edi_imm32(memory); //  0 + 1 ->  1
-        emit_i32(memory, x);        //  1 + 4 ->  5
-        emit_call(memory);          //  5 + 1 ->  6
-        emit_i32(memory, 6);        //  6 + 4 -> 10
-        emit_ret(memory);           // 10 + 1 -> 11
-        emit_mov_eax_imm32(memory); // 11 + 1 -> 12
-        emit_i32(memory, x + 1);    // 12 + 4 -> 16
+        emit_mov_edi_imm32(memory);  //  0 + 1 ->  1
+        emit_i32(memory, x);         //  1 + 4 ->  5
+        emit_call_rel_imm32(memory); //  5 + 1 ->  6
+        emit_i32(memory, 6);         //  6 + 4 -> 10
+        emit_ret(memory);            // 10 + 1 -> 11
+        emit_mov_eax_imm32(memory);  // 11 + 1 -> 12
+        emit_i32(memory, x + 1);     // 12 + 4 -> 16
     }
     EXIT_IF(memory->buffer_index != 16);
     {
