@@ -65,4 +65,4 @@ clang-format -i -verbose "$WD/src"/*.h 2>&1 | sed 's/\/.*\///g'
     python3 -c "print(\"Compiled! ({:.3f}s)\n\".format(${end} - ${start}))"
 )
 
-"$WD/bin/main" || echo $?
+"$WD/bin/main" "$WD/code/main.asm" || echo $?

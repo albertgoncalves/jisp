@@ -1,7 +1,7 @@
 #ifndef __COMPILE_H__
 #define __COMPILE_H__
 
-#include "prelude.h"
+#include "memory.h"
 
 /* NOTE: Useful resources:
  * `https://bernsteinbear.com/blog/lisp/`
@@ -14,37 +14,34 @@
 #include <string.h>
 #include <sys/mman.h>
 
-#define SIZE_BUFFER 56
-
-typedef struct {
-    u8    buffer[SIZE_BUFFER];
-    usize buffer_index;
-} Memory;
-
 typedef struct {
     void* buffer;
 } Program;
 
 typedef i32 (*FnVoidI32)(void);
 
-#define EMIT_1_BYTE(fn, x)                            \
-    static void fn(Memory* memory) {                  \
-        EXIT_IF(SIZE_BUFFER <= memory->buffer_index); \
-        memory->buffer[memory->buffer_index++] = x;   \
+#define EMIT_1_BYTE(fn, x)                                                 \
+    static void fn(Memory* memory) {                                       \
+        EXIT_IF(sizeof(memory->byte_buffer) <= memory->byte_buffer_index); \
+        memory->byte_buffer[memory->byte_buffer_index++] = x;              \
     }
 
-#define EMIT_2_BYTES(fn, a, b)                             \
-    static void fn(Memory* memory) {                       \
-        EXIT_IF(SIZE_BUFFER < (memory->buffer_index + 2)); \
-        memory->buffer[memory->buffer_index++] = a;        \
-        memory->buffer[memory->buffer_index++] = b;        \
+#define EMIT_2_BYTES(fn, a, b)                                \
+    static void fn(Memory* memory) {                          \
+        EXIT_IF(sizeof(memory->byte_buffer) <                 \
+                (memory->byte_buffer_index + 2));             \
+        memory->byte_buffer[memory->byte_buffer_index++] = a; \
+        memory->byte_buffer[memory->byte_buffer_index++] = b; \
     }
 
-#define EMIT_1_VAR(fn, type)                                                 \
-    static void fn(Memory* memory, type value) {                             \
-        EXIT_IF(SIZE_BUFFER < (memory->buffer_index + sizeof(type)));        \
-        memcpy(&memory->buffer[memory->buffer_index], &value, sizeof(type)); \
-        memory->buffer_index += sizeof(type);                                \
+#define EMIT_1_VAR(fn, type)                                    \
+    static void fn(Memory* memory, type value) {                \
+        EXIT_IF(sizeof(memory->byte_buffer) <                   \
+                (memory->byte_buffer_index + sizeof(type)));    \
+        memcpy(&memory->byte_buffer[memory->byte_buffer_index], \
+               &value,                                          \
+               sizeof(type));                                   \
+        memory->byte_buffer_index += sizeof(type);              \
     }
 
 EMIT_1_BYTE(emit_mov_eax_imm32, 0xB8)
@@ -60,19 +57,19 @@ EMIT_1_VAR(emit_i32, i32) // NOTE: 4 bytes!
 static Program transform(Memory* memory) {
     Program program = {0};
     program.buffer = mmap(NULL,
-                          memory->buffer_index,
+                          memory->byte_buffer_index,
                           PROT_READ | PROT_WRITE,
                           MAP_ANONYMOUS | MAP_PRIVATE,
                           -1,
                           0);
     EXIT_IF(program.buffer == MAP_FAILED);
-    memcpy(program.buffer, &memory->buffer, memory->buffer_index);
-    EXIT_IF(mprotect(program.buffer, memory->buffer_index, PROT_EXEC));
+    memcpy(program.buffer, &memory->byte_buffer, memory->byte_buffer_index);
+    EXIT_IF(mprotect(program.buffer, memory->byte_buffer_index, PROT_EXEC));
     return program;
 }
 
 static void test_compile(Memory* memory) {
-    memory->buffer_index = 0;
+    memory->byte_buffer_index = 0;
     i32 x = 42;
     {
         /*     - 0-     mov     edi, `x`
@@ -87,7 +84,7 @@ static void test_compile(Memory* memory) {
         emit_ret(memory);            // 10 + 1 -> 11
         emit_mov_eax_imm32(memory);  // 11 + 1 -> 12
         emit_i32(memory, x + 1);     // 12 + 4 -> 16
-        EXIT_IF(memory->buffer_index != 16);
+        EXIT_IF(memory->byte_buffer_index != 16);
     }
     {
         /*          label:
@@ -102,13 +99,13 @@ static void test_compile(Memory* memory) {
         emit_mov_eax_ebx(memory); // 19 + 2 -> 21
         emit_pop_rbx(memory);     // 21 + 1 -> 22
         emit_ret(memory);         // 22 + 1 -> 23
-        EXIT_IF(memory->buffer_index != 23);
+        EXIT_IF(memory->byte_buffer_index != 23);
     }
     {
         Program program = transform(memory);
         i32     return_value = (*((FnVoidI32*)&program.buffer))();
         EXIT_IF(x != return_value);
-        EXIT_IF(munmap(program.buffer, memory->buffer_index));
+        EXIT_IF(munmap(program.buffer, memory->byte_buffer_index));
     }
     PRINT_FN_OK();
 }

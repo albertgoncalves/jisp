@@ -11,6 +11,8 @@ typedef size_t   usize;
 
 typedef int32_t i32;
 
+typedef FILE File;
+
 typedef enum {
     FALSE = 0,
     TRUE,
