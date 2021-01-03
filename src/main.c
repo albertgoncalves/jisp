@@ -24,6 +24,20 @@ typedef struct {
 
 typedef i32 (*FnVoidI32)(void);
 
+static Program transform(Memory* memory) {
+    Program program = {0};
+    program.buffer = mmap(NULL,
+                          memory->buffer_index,
+                          PROT_READ | PROT_WRITE,
+                          MAP_ANONYMOUS | MAP_PRIVATE,
+                          -1,
+                          0);
+    EXIT_IF(program.buffer == MAP_FAILED);
+    memcpy(program.buffer, &memory->buffer, memory->buffer_index);
+    EXIT_IF(mprotect(program.buffer, memory->buffer_index, PROT_EXEC));
+    return program;
+}
+
 #define EMIT_1_BYTE(fn, x)                            \
     static void fn(Memory* memory) {                  \
         EXIT_IF(SIZE_BUFFER <= memory->buffer_index); \
@@ -53,20 +67,6 @@ EMIT_1_BYTE(emit_ret, 0xC3)
 EMIT_2_BYTES(emit_mov_eax_ebx, 0x89, 0xD8)
 EMIT_2_BYTES(emit_mov_ebx_edi, 0x89, 0xFB)
 EMIT_1_VAR(emit_i32, i32) // NOTE: 4 bytes!
-
-static Program transform(Memory* memory) {
-    Program program = {0};
-    program.buffer = mmap(NULL,
-                          memory->buffer_index,
-                          PROT_READ | PROT_WRITE,
-                          MAP_ANONYMOUS | MAP_PRIVATE,
-                          -1,
-                          0);
-    EXIT_IF(program.buffer == MAP_FAILED);
-    memcpy(program.buffer, &memory->buffer, memory->buffer_index);
-    EXIT_IF(mprotect(program.buffer, memory->buffer_index, PROT_EXEC));
-    return program;
-}
 
 i32 main(void) {
     printf("sizeof(i32)     : %zu\n"
