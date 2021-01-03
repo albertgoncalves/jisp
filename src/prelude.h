@@ -27,4 +27,6 @@ typedef enum {
         exit(EXIT_FAILURE);        \
     }
 
+#define PRINT_FN_OK() printf("%-14s OK\n", __func__)
+
 #endif
