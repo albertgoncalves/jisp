@@ -6,6 +6,7 @@
 #include <stdlib.h>
 
 typedef uint8_t  u8;
+typedef uint16_t u16;
 typedef uint32_t u32;
 typedef size_t   usize;
 
@@ -18,6 +19,12 @@ typedef enum {
     TRUE,
 } Bool;
 
+#define ERROR()                                                      \
+    {                                                                \
+        fprintf(stderr, "%s:%s:%d\n", __FILE__, __func__, __LINE__); \
+        exit(EXIT_FAILURE);                                          \
+    }
+
 #define EXIT_IF(condition)         \
     if (condition) {               \
         fprintf(stderr,            \
@@ -29,6 +36,6 @@ typedef enum {
         exit(EXIT_FAILURE);        \
     }
 
-#define PRINT_FN_OK() printf("%-14s OK\n", __func__)
+#define PRINT_FN_OK() printf("%-20s OK\n", __func__)
 
 #endif
