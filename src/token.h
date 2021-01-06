@@ -24,7 +24,7 @@ typedef enum {
 
 typedef struct {
     const char* string;
-    u32         number;
+    i32         number;
     u16         line;
     TokenTag    tag;
 } Token;

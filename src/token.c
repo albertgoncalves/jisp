@@ -34,7 +34,7 @@ static void dealloc_buffer(Memory* memory, usize size) {
         return result;                                          \
     }
 
-GET_DECIMAL(get_decimal_u32, u32)
+GET_DECIMAL(get_decimal_i32, i32)
 
 static void set_tokens(Memory* memory) {
     u16 line = 1;
@@ -92,7 +92,7 @@ static void set_tokens(Memory* memory) {
             buffer[size - 1] = '\0';
             if (('0' <= buffer[0]) && (buffer[0] <= '9')) {
                 token->tag = TOKEN_NUM;
-                token->number = get_decimal_u32(buffer);
+                token->number = get_decimal_i32(buffer);
                 dealloc_buffer(memory, size);
 
             } else if (!memcmp(buffer, "rax", size)) {
@@ -182,7 +182,7 @@ static void print_token(Token* token) {
         break;
     }
     case TOKEN_NUM: {
-        printf(FMT_LINE "%u", token->line, token->number);
+        printf(FMT_LINE "%d", token->line, token->number);
         break;
     }
     case TOKEN_STR: {
