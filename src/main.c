@@ -83,6 +83,7 @@ static void test_tokens(Memory* memory) {
         EXIT_IF(tokens[25].tag != TOKEN_RET);
         EXIT_IF(tokens[25].line != 10);
         EXIT_IF(memory->tokens_index != 26);
+        EXIT_IF(memory->buffer_index != 12);
         memory->file_index = 0;
         memory->tokens_index = 0;
         memory->buffer_index = 0;

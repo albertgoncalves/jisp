@@ -6,8 +6,8 @@
 
 #define SIZE_FILE   184
 #define SIZE_TOKENS 32
-#define SIZE_BUFFER 120
-#define SIZE_BYTES  56
+#define SIZE_BUFFER 20
+#define SIZE_BYTES  26
 
 typedef struct {
     char  file[SIZE_FILE];

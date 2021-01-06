@@ -15,23 +15,30 @@ static char* alloc_buffer(Memory* memory, usize size) {
     return buffer;
 }
 
-static u32 get_decimal(const char* decimal) {
-    u32 result = 0;
-    while (*decimal) {
-        char digit = *(decimal++);
-        if (('0' <= digit) && (digit <= '9')) {
-            result = (result * 10) + ((u32)(digit - '0'));
-        } else {
-            ERROR();
-        }
-    }
-    return result;
+static void dealloc_buffer(Memory* memory, usize size) {
+    EXIT_IF(memory->buffer_index < size);
+    memory->buffer_index -= size;
 }
 
+#define GET_DECIMAL(fn, type)                                   \
+    static type fn(const char* decimal) {                       \
+        type result = 0;                                        \
+        while (*decimal) {                                      \
+            char digit = *(decimal++);                          \
+            if (('0' <= digit) && (digit <= '9')) {             \
+                result = (result * 10) + ((type)(digit - '0')); \
+            } else {                                            \
+                ERROR();                                        \
+            }                                                   \
+        }                                                       \
+        return result;                                          \
+    }
+
+GET_DECIMAL(get_decimal_u32, u32)
+
 static void set_tokens(Memory* memory) {
-    usize size = memory->file_index;
-    u16   line = 1;
-    for (usize i = 0; i < size;) {
+    u16 line = 1;
+    for (usize i = 0; i < memory->file_index;) {
         switch (memory->file[i]) {
         case ' ':
         case '\t': {
@@ -44,7 +51,7 @@ static void set_tokens(Memory* memory) {
             break;
         }
         case ';': {
-            for (; i < size; ++i) {
+            for (; i < memory->file_index; ++i) {
                 if (memory->file[i] == '\n') {
                     break;
                 }
@@ -69,7 +76,7 @@ static void set_tokens(Memory* memory) {
             Token* token = alloc_token(memory);
             token->line = line;
             usize j = i + 1;
-            for (; j < size; ++j) {
+            for (; j < memory->file_index; ++j) {
                 char x = memory->file[j];
                 if (!((('a' <= x) && (x <= 'z')) ||
                       (('A' <= x) && (x <= 'Z')) ||
@@ -78,42 +85,52 @@ static void set_tokens(Memory* memory) {
                     break;
                 }
             }
-            char* buffer = alloc_buffer(memory, (j - i) + 1);
-            u32   k = 0;
-            while (i < j) {
-                buffer[k++] = memory->file[i++];
-            }
-            buffer[k] = '\0';
-            token->string = buffer;
+            usize size = (j - i) + 1;
+            char* buffer = alloc_buffer(memory, size);
+            memcpy(buffer, &memory->file[i], size - 1);
+            i = j;
+            buffer[size - 1] = '\0';
             if (('0' <= buffer[0]) && (buffer[0] <= '9')) {
                 token->tag = TOKEN_NUM;
-                token->number = get_decimal(buffer);
+                token->number = get_decimal_u32(buffer);
+                dealloc_buffer(memory, size);
 
-            } else if (!memcmp(buffer, "rax", k)) {
+            } else if (!memcmp(buffer, "rax", size)) {
                 token->tag = TOKEN_RAX;
-            } else if (!memcmp(buffer, "rbx", k)) {
+                dealloc_buffer(memory, size);
+            } else if (!memcmp(buffer, "rbx", size)) {
                 token->tag = TOKEN_RBX;
+                dealloc_buffer(memory, size);
 
-            } else if (!memcmp(buffer, "eax", k)) {
+            } else if (!memcmp(buffer, "eax", size)) {
                 token->tag = TOKEN_EAX;
-            } else if (!memcmp(buffer, "ebx", k)) {
+                dealloc_buffer(memory, size);
+            } else if (!memcmp(buffer, "ebx", size)) {
                 token->tag = TOKEN_EBX;
-            } else if (!memcmp(buffer, "edi", k)) {
+                dealloc_buffer(memory, size);
+            } else if (!memcmp(buffer, "edi", size)) {
                 token->tag = TOKEN_EDI;
+                dealloc_buffer(memory, size);
 
-            } else if (!memcmp(buffer, "mov", k)) {
+            } else if (!memcmp(buffer, "mov", size)) {
                 token->tag = TOKEN_MOV;
-            } else if (!memcmp(buffer, "push", k)) {
+                dealloc_buffer(memory, size);
+            } else if (!memcmp(buffer, "push", size)) {
                 token->tag = TOKEN_PUSH;
-            } else if (!memcmp(buffer, "pop", k)) {
+                dealloc_buffer(memory, size);
+            } else if (!memcmp(buffer, "pop", size)) {
                 token->tag = TOKEN_POP;
-            } else if (!memcmp(buffer, "call", k)) {
+                dealloc_buffer(memory, size);
+            } else if (!memcmp(buffer, "call", size)) {
                 token->tag = TOKEN_CALL;
-            } else if (!memcmp(buffer, "ret", k)) {
+                dealloc_buffer(memory, size);
+            } else if (!memcmp(buffer, "ret", size)) {
                 token->tag = TOKEN_RET;
+                dealloc_buffer(memory, size);
 
             } else {
                 token->tag = TOKEN_STR;
+                token->string = buffer;
             }
         }
         }
