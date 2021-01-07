@@ -2,7 +2,7 @@
 #define __PARSE_C__
 
 #include "memory.h"
-#include "token.c"
+#include "token.h"
 
 static Inst* alloc_inst(Memory* memory) {
     EXIT_IF(SIZE_INSTS <= memory->insts_index);

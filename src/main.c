@@ -1,6 +1,14 @@
-#include "emit.h"
+#include "emit.c"
 #include "parse.c"
 #include "token.c"
+
+/* NOTE: Useful resources:
+ * `https://bernsteinbear.com/blog/lisp/`
+ * `http://cs.brown.edu/courses/cs033/docs/guides/x64_cheatsheet.pdf`
+ * `http://6.s081.scripts.mit.edu/sp18/x86-64-architecture-guide.html`
+ * `https://www.felixcloutier.com/x86/call`
+ * `https://software.intel.com/content/www/us/en/develop/articles/intel-sdm.html`
+ */
 
 static void test_compile(Memory* memory) {
     {
