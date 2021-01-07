@@ -11,6 +11,7 @@
  */
 
 static void test_compile(Memory* memory) {
+    reset(memory);
     {
         const char* source = "    mov     edi, 42\n"
                              "    call    label\n"
@@ -147,6 +148,10 @@ static void test_compile(Memory* memory) {
         EXIT_IF(insts[7].dst.reg != REG_RBX);
         EXIT_IF(insts[7].position != 21);
         EXIT_IF(insts[7].size != 1);
+
+        EXIT_IF(insts[8].tag != INST_RET);
+        EXIT_IF(insts[8].position != 22);
+        EXIT_IF(insts[8].size != 1);
     }
     {
         set_bytes(memory);
@@ -154,18 +159,13 @@ static void test_compile(Memory* memory) {
         Program program = transform(memory);
         EXIT_IF(42 != (*((FnVoidI32*)&program.buffer))());
         EXIT_IF(munmap(program.buffer, memory->bytes_index));
-        memory->file_index = 0;
-        memory->tokens_index = 0;
-        memory->buffer_index = 0;
-        memory->insts_index = 0;
-        memory->labels_index = 0;
-        memory->bytes_index = 0;
     }
+    reset(memory);
     PRINT_FN_OK();
 }
 
 static void test_emit_transform(Memory* memory) {
-    memory->bytes_index = 0;
+    reset(memory);
     i32 x = 42;
     {
         /*     - 0-     mov     edi, `x`
@@ -201,8 +201,8 @@ static void test_emit_transform(Memory* memory) {
         Program program = transform(memory);
         EXIT_IF(x != (*((FnVoidI32*)&program.buffer))());
         EXIT_IF(munmap(program.buffer, memory->bytes_index));
-        memory->bytes_index = 0;
     }
+    reset(memory);
     PRINT_FN_OK();
 }
 
@@ -244,8 +244,11 @@ i32 main(i32 n, const char** args) {
         set_insts(memory);
         resolve_insts(memory);
         set_bytes(memory);
-        Program program = transform(memory);
-        printf("%d\n", (*((FnVoidI32*)&program.buffer))());
+        {
+            Program program = transform(memory);
+            printf("%d\n", (*((FnVoidI32*)&program.buffer))());
+            EXIT_IF(munmap(program.buffer, memory->bytes_index));
+        }
     }
     free(memory);
     return EXIT_SUCCESS;

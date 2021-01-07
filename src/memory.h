@@ -39,4 +39,13 @@ static void set_file(Memory* memory, const char* filename) {
     fclose(file);
 }
 
+static void reset(Memory* memory) {
+    memory->file_index = 0;
+    memory->tokens_index = 0;
+    memory->buffer_index = 0;
+    memory->insts_index = 0;
+    memory->labels_index = 0;
+    memory->bytes_index = 0;
+}
+
 #endif
