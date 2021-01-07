@@ -41,6 +41,7 @@ static Register get_register(TokenTag tag) {
     case TOKEN_COMMA:
     case TOKEN_COLON:
     case TOKEN_MOV:
+    case TOKEN_ADD:
     case TOKEN_PUSH:
     case TOKEN_POP:
     case TOKEN_CALL:
@@ -118,6 +119,27 @@ static void set_insts(Memory* memory) {
                     };
                     set_size_position(inst, &position, 5);
                     inst->tag = INST_MOV_REG_IMM32;
+                    continue;
+                }
+            }
+            UNEXPECTED_TOKEN(token);
+            break;
+        }
+        case TOKEN_ADD: {
+            Token dst = pop_token(memory, &i);
+            EXPECTED_TOKEN(TOKEN_COMMA, memory, i);
+            Token src = pop_token(memory, &i);
+            Inst* inst = alloc_inst(memory);
+            if (is_register(dst)) {
+                inst->dst = (Arg){
+                    .reg = get_register(dst.tag),
+                };
+                if (src.tag == TOKEN_NUM) {
+                    inst->src = (Arg){
+                        .imm_i32 = src.number,
+                    };
+                    set_size_position(inst, &position, 5);
+                    inst->tag = INST_ADD_REG_IMM32;
                     continue;
                 }
             }

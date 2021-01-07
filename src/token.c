@@ -115,6 +115,9 @@ static void set_tokens(Memory* memory) {
             } else if (!memcmp(buffer, "mov", size)) {
                 token->tag = TOKEN_MOV;
                 dealloc_buffer(memory, size);
+            } else if (!memcmp(buffer, "add", size)) {
+                token->tag = TOKEN_ADD;
+                dealloc_buffer(memory, size);
             } else if (!memcmp(buffer, "push", size)) {
                 token->tag = TOKEN_PUSH;
                 dealloc_buffer(memory, size);

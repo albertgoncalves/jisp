@@ -16,6 +16,7 @@ typedef enum {
     TOKEN_COLON,
 
     TOKEN_MOV,
+    TOKEN_ADD,
     TOKEN_PUSH,
     TOKEN_POP,
     TOKEN_CALL,

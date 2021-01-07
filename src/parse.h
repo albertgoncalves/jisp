@@ -9,6 +9,8 @@ typedef enum {
     INST_MOV_REG_IMM32,
     INST_MOV_REG_REG,
 
+    INST_ADD_REG_IMM32,
+
     INST_PUSH_REG,
     INST_POP_REG,
 
