@@ -101,10 +101,10 @@ static void set_insts(Memory* memory) {
             EXPECTED_TOKEN(TOKEN_COMMA, memory, i);
             Token src = pop_token(memory, &i);
             Inst* inst = alloc_inst(memory);
-            inst->dst = (Arg){
-                .reg = get_register(dst.tag),
-            };
             if (is_register(dst)) {
+                inst->dst = (Arg){
+                    .reg = get_register(dst.tag),
+                };
                 if (is_register(src)) {
                     inst->src = (Arg){
                         .reg = get_register(src.tag),
