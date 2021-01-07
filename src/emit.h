@@ -1,5 +1,5 @@
-#ifndef __COMPILE_H__
-#define __COMPILE_H__
+#ifndef __EMIT_H__
+#define __EMIT_H__
 
 #include "memory.h"
 
@@ -49,6 +49,78 @@ EMIT_1_BYTE(emit_ret, 0xC3)
 EMIT_2_BYTES(emit_mov_eax_ebx, 0x89, 0xD8)
 EMIT_2_BYTES(emit_mov_ebx_edi, 0x89, 0xFB)
 EMIT_1_VAR(emit_i32, i32) // NOTE: 4 bytes!
+
+static void check_size(Memory* memory, usize* position, usize size) {
+    EXIT_IF((memory->bytes_index - *position) != size);
+    *position += size;
+}
+
+static void set_bytes(Memory* memory) {
+    usize position = 0;
+    for (usize i = 0; i < memory->insts_index; ++i) {
+        Inst inst = memory->insts[i];
+        switch (inst.tag) {
+        case INST_UNKNOWN:
+        case INST_CALL_REL_IMM32_UNRESOLVED: {
+            ERROR();
+        }
+        case INST_MOV_REG_IMM32: {
+            if (inst.dst.reg == REG_EAX) {
+                emit_mov_eax_imm32(memory);
+            } else if (inst.dst.reg == REG_EDI) {
+                emit_mov_edi_imm32(memory);
+            } else {
+                ERROR();
+            }
+            emit_i32(memory, inst.src.imm_i32);
+            check_size(memory, &position, inst.size);
+            break;
+        }
+        case INST_MOV_REG_REG: {
+            Register dst = inst.dst.reg;
+            Register src = inst.src.reg;
+            if ((dst == REG_EAX) && (src == REG_EBX)) {
+                emit_mov_eax_ebx(memory);
+            } else if ((dst == REG_EBX) && (src == REG_EDI)) {
+                emit_mov_ebx_edi(memory);
+            } else {
+                ERROR();
+            }
+            check_size(memory, &position, inst.size);
+            break;
+        }
+        case INST_PUSH_REG: {
+            if (inst.src.reg == REG_RBX) {
+                emit_push_rbx(memory);
+            } else {
+                ERROR();
+            }
+            check_size(memory, &position, inst.size);
+            break;
+        }
+        case INST_POP_REG: {
+            if (inst.dst.reg == REG_RBX) {
+                emit_pop_rbx(memory);
+            } else {
+                ERROR();
+            }
+            check_size(memory, &position, inst.size);
+            break;
+        }
+        case INST_CALL_REL_IMM32: {
+            emit_call_rel_imm32(memory);
+            emit_i32(memory, inst.dst.imm_i32);
+            check_size(memory, &position, inst.size);
+            break;
+        }
+        case INST_RET: {
+            emit_ret(memory);
+            check_size(memory, &position, inst.size);
+            break;
+        }
+        }
+    }
+}
 
 static Program transform(Memory* memory) {
     Program program = {0};

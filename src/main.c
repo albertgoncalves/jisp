@@ -1,8 +1,8 @@
-#include "compile.h"
+#include "emit.h"
 #include "parse.c"
 #include "token.c"
 
-static void test_token_parse(Memory* memory) {
+static void test_compile(Memory* memory) {
     {
         const char* source = "    mov     edi, 42\n"
                              "    call    label\n"
@@ -141,11 +141,17 @@ static void test_token_parse(Memory* memory) {
         EXIT_IF(insts[7].size != 1);
     }
     {
+        set_bytes(memory);
+        EXIT_IF(memory->bytes_index != 23);
+        Program program = transform(memory);
+        EXIT_IF(42 != (*((FnVoidI32*)&program.buffer))());
+        EXIT_IF(munmap(program.buffer, memory->bytes_index));
         memory->file_index = 0;
         memory->tokens_index = 0;
         memory->buffer_index = 0;
         memory->insts_index = 0;
         memory->labels_index = 0;
+        memory->bytes_index = 0;
     }
     PRINT_FN_OK();
 }
@@ -185,8 +191,7 @@ static void test_emit_transform(Memory* memory) {
     }
     {
         Program program = transform(memory);
-        i32     return_value = (*((FnVoidI32*)&program.buffer))();
-        EXIT_IF(x != return_value);
+        EXIT_IF(x != (*((FnVoidI32*)&program.buffer))());
         EXIT_IF(munmap(program.buffer, memory->bytes_index));
         memory->bytes_index = 0;
     }
@@ -218,7 +223,7 @@ i32 main(i32 n, const char** args) {
            sizeof(Inst),
            sizeof(Program));
     EXIT_IF(n < 2);
-    test_token_parse(memory);
+    test_compile(memory);
     test_emit_transform(memory);
     {
         set_file(memory, args[1]);
@@ -226,6 +231,9 @@ i32 main(i32 n, const char** args) {
         set_tokens(memory);
         set_insts(memory);
         resolve_insts(memory);
+        set_bytes(memory);
+        Program program = transform(memory);
+        printf("%d\n", (*((FnVoidI32*)&program.buffer))());
     }
     free(memory);
     return EXIT_SUCCESS;

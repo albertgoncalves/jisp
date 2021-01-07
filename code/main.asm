@@ -1,7 +1,6 @@
-    mov     edi, 42
+    mov     edi, 100
     call    label
     ret
-    mov     eax, 43 ; NOTE: Never evaluated!
 label:
     push    rbx
     mov     ebx, edi
