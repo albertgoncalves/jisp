@@ -211,24 +211,28 @@ i32 main(i32 n, const char** args) {
     EXIT_IF(!memory);
     printf("sizeof(Memory)         : %zu\n"
            "sizeof(memory->file)   : %zu\n"
-           "sizeof(memory->bytes)  : %zu\n"
            "sizeof(memory->tokens) : %zu\n"
            "sizeof(memory->buffer) : %zu\n"
-           "sizeof(TokenTag)       : %zu\n"
+           "sizeof(memory->insts)  : %zu\n"
+           "sizeof(memory->labels) : %zu\n"
+           "sizeof(memory->bytes)  : %zu\n"
            "sizeof(Token)          : %zu\n"
            "sizeof(Arg)            : %zu\n"
            "sizeof(Inst)           : %zu\n"
+           "sizeof(Label)          : %zu\n"
            "sizeof(Program)        : %zu\n"
            "\n",
            sizeof(Memory),
            sizeof(memory->file),
-           sizeof(memory->bytes),
            sizeof(memory->tokens),
            sizeof(memory->buffer),
-           sizeof(TokenTag),
+           sizeof(memory->insts),
+           sizeof(memory->labels),
+           sizeof(memory->bytes),
            sizeof(Token),
            sizeof(Arg),
            sizeof(Inst),
+           sizeof(Label),
            sizeof(Program));
     EXIT_IF(n < 2);
     test_compile(memory);

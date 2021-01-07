@@ -36,16 +36,16 @@ typedef union {
 } Arg;
 
 typedef struct {
-    const char* string;
-    u16         position;
-} Label;
-
-typedef struct {
     Arg     dst;
     Arg     src;
     u16     position;
     u16     size;
     InstTag tag;
 } Inst;
+
+typedef struct {
+    const char* string;
+    u16         position;
+} Label;
 
 #endif
