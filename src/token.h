@@ -9,17 +9,17 @@ typedef enum {
     TOKEN_EBX,
     TOKEN_EDI,
 
-    TOKEN_MOV,
-    TOKEN_PUSH,
-    TOKEN_POP,
-    TOKEN_CALL,
-    TOKEN_RET,
-
     TOKEN_NUM,
     TOKEN_STR,
 
     TOKEN_COMMA,
     TOKEN_COLON,
+
+    TOKEN_MOV,
+    TOKEN_PUSH,
+    TOKEN_POP,
+    TOKEN_CALL,
+    TOKEN_RET,
 } TokenTag;
 
 typedef struct {
@@ -28,5 +28,9 @@ typedef struct {
     u16         line;
     TokenTag    tag;
 } Token;
+
+static Bool is_register(Token token) {
+    return token.tag < TOKEN_NUM;
+}
 
 #endif

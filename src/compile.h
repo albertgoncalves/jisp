@@ -20,23 +20,22 @@ typedef struct {
 
 typedef i32 (*FnVoidI32)(void);
 
-#define EMIT_1_BYTE(fn, x)                                     \
-    static void fn(Memory* memory) {                           \
-        EXIT_IF(sizeof(memory->bytes) <= memory->bytes_index); \
-        memory->bytes[memory->bytes_index++] = x;              \
+#define EMIT_1_BYTE(fn, x)                          \
+    static void fn(Memory* memory) {                \
+        EXIT_IF(SIZE_BYTES <= memory->bytes_index); \
+        memory->bytes[memory->bytes_index++] = x;   \
     }
 
-#define EMIT_2_BYTES(fn, a, b)                                      \
-    static void fn(Memory* memory) {                                \
-        EXIT_IF(sizeof(memory->bytes) < (memory->bytes_index + 2)); \
-        memory->bytes[memory->bytes_index++] = a;                   \
-        memory->bytes[memory->bytes_index++] = b;                   \
+#define EMIT_2_BYTES(fn, a, b)                           \
+    static void fn(Memory* memory) {                     \
+        EXIT_IF(SIZE_BYTES < (memory->bytes_index + 2)); \
+        memory->bytes[memory->bytes_index++] = a;        \
+        memory->bytes[memory->bytes_index++] = b;        \
     }
 
 #define EMIT_1_VAR(fn, type)                                               \
     static void fn(Memory* memory, type value) {                           \
-        EXIT_IF(sizeof(memory->bytes) <                                    \
-                (memory->bytes_index + sizeof(type)));                     \
+        EXIT_IF(SIZE_BYTES < (memory->bytes_index + sizeof(type)));        \
         memcpy(&memory->bytes[memory->bytes_index], &value, sizeof(type)); \
         memory->bytes_index += sizeof(type);                               \
     }

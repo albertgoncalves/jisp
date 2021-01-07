@@ -137,68 +137,68 @@ static void set_tokens(Memory* memory) {
     }
 }
 
-#define FMT_LINE "[%3hu]  "
+#define FMT_LINE "( ln. %-3hu) "
 
-static void print_token(Token* token) {
-    switch (token->tag) {
+static void print_token(File* stream, Token token) {
+    switch (token.tag) {
     case TOKEN_RAX: {
-        printf(FMT_LINE "rax", token->line);
+        fprintf(stream, FMT_LINE "rax", token.line);
         break;
     }
     case TOKEN_RBX: {
-        printf(FMT_LINE "rbx", token->line);
+        fprintf(stream, FMT_LINE "rbx", token.line);
         break;
     }
     case TOKEN_EAX: {
-        printf(FMT_LINE "eax", token->line);
+        fprintf(stream, FMT_LINE "eax", token.line);
         break;
     }
     case TOKEN_EBX: {
-        printf(FMT_LINE "ebx", token->line);
+        fprintf(stream, FMT_LINE "ebx", token.line);
         break;
     }
     case TOKEN_EDI: {
-        printf(FMT_LINE "edi", token->line);
+        fprintf(stream, FMT_LINE "edi", token.line);
         break;
     }
     case TOKEN_MOV: {
-        printf(FMT_LINE "mov", token->line);
+        fprintf(stream, FMT_LINE "mov", token.line);
         break;
     }
     case TOKEN_PUSH: {
-        printf(FMT_LINE "push", token->line);
+        fprintf(stream, FMT_LINE "push", token.line);
         break;
     }
     case TOKEN_POP: {
-        printf(FMT_LINE "pop", token->line);
+        fprintf(stream, FMT_LINE "pop", token.line);
         break;
     }
     case TOKEN_CALL: {
-        printf(FMT_LINE "call", token->line);
+        fprintf(stream, FMT_LINE "call", token.line);
         break;
     }
     case TOKEN_RET: {
-        printf(FMT_LINE "ret", token->line);
+        fprintf(stream, FMT_LINE "ret", token.line);
         break;
     }
     case TOKEN_NUM: {
-        printf(FMT_LINE "%d", token->line, token->number);
+        fprintf(stream, FMT_LINE "%d", token.line, token.number);
         break;
     }
     case TOKEN_STR: {
-        printf(FMT_LINE "\"%s\"", token->line, token->string);
+        fprintf(stream, FMT_LINE "\"%s\"", token.line, token.string);
         break;
     }
     case TOKEN_COMMA: {
-        printf(FMT_LINE ",", token->line);
+        fprintf(stream, FMT_LINE ",", token.line);
         break;
     }
     case TOKEN_COLON: {
-        printf(FMT_LINE ":", token->line);
+        fprintf(stream, FMT_LINE ":", token.line);
         break;
     }
     }
-    printf("\n");
+    fprintf(stream, "\n");
 }
 
 #endif

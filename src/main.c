@@ -1,7 +1,8 @@
 #include "compile.h"
+#include "parse.c"
 #include "token.c"
 
-static void test_tokens(Memory* memory) {
+static void test_token_parse(Memory* memory) {
     {
         const char* source = "    mov     edi, 42\n"
                              "    call    label\n"
@@ -84,9 +85,67 @@ static void test_tokens(Memory* memory) {
         EXIT_IF(tokens[25].line != 10);
         EXIT_IF(memory->tokens_index != 26);
         EXIT_IF(memory->buffer_index != 12);
+    }
+    {
+        set_insts(memory);
+        EXIT_IF(memory->labels_index != 1);
+        {
+            const char* string = memory->labels[0].string;
+            EXIT_IF(memcmp(string, "label", strlen(string)));
+        }
+        EXIT_IF(memory->labels[0].position != 16);
+        resolve_insts(memory);
+        Inst* insts = memory->insts;
+
+        EXIT_IF(insts[0].tag != INST_MOV_REG_IMM32);
+        EXIT_IF(insts[0].dst.reg != REG_EDI);
+        EXIT_IF(insts[0].src.imm_i32 != 42);
+        EXIT_IF(insts[0].position != 0);
+        EXIT_IF(insts[0].size != 5);
+
+        EXIT_IF(insts[1].tag != INST_CALL_REL_IMM32);
+        EXIT_IF(insts[1].dst.imm_i32 != 6);
+        EXIT_IF(insts[1].position != 5);
+        EXIT_IF(insts[1].size != 5);
+
+        EXIT_IF(insts[2].tag != INST_RET);
+        EXIT_IF(insts[2].position != 10);
+        EXIT_IF(insts[2].size != 1);
+
+        EXIT_IF(insts[3].tag != INST_MOV_REG_IMM32);
+        EXIT_IF(insts[3].dst.reg != REG_EAX);
+        EXIT_IF(insts[3].src.imm_i32 != 43);
+        EXIT_IF(insts[3].position != 11);
+        EXIT_IF(insts[3].size != 5);
+
+        EXIT_IF(insts[4].tag != INST_PUSH_REG);
+        EXIT_IF(insts[4].src.reg != REG_RBX);
+        EXIT_IF(insts[4].position != 16);
+        EXIT_IF(insts[4].size != 1);
+
+        EXIT_IF(insts[5].tag != INST_MOV_REG_REG);
+        EXIT_IF(insts[5].dst.reg != REG_EBX);
+        EXIT_IF(insts[5].src.reg != REG_EDI);
+        EXIT_IF(insts[5].position != 17);
+        EXIT_IF(insts[5].size != 2);
+
+        EXIT_IF(insts[6].tag != INST_MOV_REG_REG);
+        EXIT_IF(insts[6].dst.reg != REG_EAX);
+        EXIT_IF(insts[6].src.reg != REG_EBX);
+        EXIT_IF(insts[6].position != 19);
+        EXIT_IF(insts[6].size != 2);
+
+        EXIT_IF(insts[7].tag != INST_POP_REG);
+        EXIT_IF(insts[7].dst.reg != REG_RBX);
+        EXIT_IF(insts[7].position != 21);
+        EXIT_IF(insts[7].size != 1);
+    }
+    {
         memory->file_index = 0;
         memory->tokens_index = 0;
         memory->buffer_index = 0;
+        memory->insts_index = 0;
+        memory->labels_index = 0;
     }
     PRINT_FN_OK();
 }
@@ -144,6 +203,8 @@ i32 main(i32 n, const char** args) {
            "sizeof(memory->buffer) : %zu\n"
            "sizeof(TokenTag)       : %zu\n"
            "sizeof(Token)          : %zu\n"
+           "sizeof(Arg)            : %zu\n"
+           "sizeof(Inst)           : %zu\n"
            "sizeof(Program)        : %zu\n"
            "\n",
            sizeof(Memory),
@@ -153,17 +214,18 @@ i32 main(i32 n, const char** args) {
            sizeof(memory->buffer),
            sizeof(TokenTag),
            sizeof(Token),
+           sizeof(Arg),
+           sizeof(Inst),
            sizeof(Program));
     EXIT_IF(n < 2);
-    test_tokens(memory);
+    test_token_parse(memory);
     test_emit_transform(memory);
     {
         set_file(memory, args[1]);
-        set_tokens(memory);
         printf("\n%s\n", memory->file);
-        for (usize i = 0; i < memory->tokens_index; ++i) {
-            print_token(&memory->tokens[i]);
-        }
+        set_tokens(memory);
+        set_insts(memory);
+        resolve_insts(memory);
     }
     free(memory);
     return EXIT_SUCCESS;
