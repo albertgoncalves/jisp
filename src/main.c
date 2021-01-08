@@ -171,7 +171,7 @@ static void test_emit_transform(Memory* memory) {
         /*     - 0-     mov     edi, `x`
          *     - 5-     call    label
          *     -10-     ret
-         *     -11-     mov     eax, `x + 1` ; NOTE: Never evaluated!
+         *     -11-     mov     eax, `-(x + 1)` ; NOTE: Never evaluated!
          */
         emit_mov_edi_imm32(memory);  //  0 + 1 ->  1
         emit_i32(memory, x);         //  1 + 4 ->  5
