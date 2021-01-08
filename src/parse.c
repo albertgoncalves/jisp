@@ -121,9 +121,9 @@ static void set_insts(Memory* memory) {
                     inst->tag = INST_MOV_REG_IMM32;
                     continue;
                 }
+                UNEXPECTED_TOKEN(src);
             }
-            UNEXPECTED_TOKEN(token);
-            break;
+            UNEXPECTED_TOKEN(dst);
         }
         case TOKEN_ADD: {
             Token dst = pop_token(memory, &i);
@@ -142,9 +142,9 @@ static void set_insts(Memory* memory) {
                     inst->tag = INST_ADD_REG_IMM32;
                     continue;
                 }
+                UNEXPECTED_TOKEN(src);
             }
-            UNEXPECTED_TOKEN(token);
-            break;
+            UNEXPECTED_TOKEN(dst);
         }
         case TOKEN_PUSH: {
             Token src = pop_token(memory, &i);
@@ -157,8 +157,7 @@ static void set_insts(Memory* memory) {
                 inst->tag = INST_PUSH_REG;
                 continue;
             }
-            UNEXPECTED_TOKEN(token);
-            break;
+            UNEXPECTED_TOKEN(src);
         }
         case TOKEN_POP: {
             Token dst = pop_token(memory, &i);
@@ -171,8 +170,7 @@ static void set_insts(Memory* memory) {
                 inst->tag = INST_POP_REG;
                 continue;
             }
-            UNEXPECTED_TOKEN(token);
-            break;
+            UNEXPECTED_TOKEN(dst);
         }
         case TOKEN_CALL: {
             Token dst = pop_token(memory, &i);
@@ -191,8 +189,7 @@ static void set_insts(Memory* memory) {
                 inst->tag = INST_CALL_REL_IMM32_UNRESOLVED;
                 continue;
             }
-            UNEXPECTED_TOKEN(token);
-            break;
+            UNEXPECTED_TOKEN(dst);
         }
         case TOKEN_RET: {
             Inst* inst = alloc_inst(memory);
