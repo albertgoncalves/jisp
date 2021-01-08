@@ -16,7 +16,7 @@ static void test_compile(Memory* memory) {
         const char* source = "    mov     edi, 42\n"
                              "    call    label\n"
                              "    ret\n"
-                             "    mov     eax, 43 ; NOTE: Never evaluated!\n"
+                             "    mov     eax, -43 ; NOTE: Never evaluated!\n"
                              "label:\n"
                              "    push    rbx\n"
                              "    mov     ebx, edi\n"
@@ -36,8 +36,8 @@ static void test_compile(Memory* memory) {
         EXIT_IF(tokens[1].line != 1);
         EXIT_IF(tokens[2].tag != TOKEN_COMMA);
         EXIT_IF(tokens[2].line != 1);
-        EXIT_IF(tokens[3].tag != TOKEN_NUM);
-        EXIT_IF(tokens[3].number != 42);
+        EXIT_IF(tokens[3].tag != TOKEN_I32);
+        EXIT_IF(tokens[3].i32 != 42);
         EXIT_IF(tokens[3].line != 1);
         EXIT_IF(tokens[4].tag != TOKEN_CALL);
         EXIT_IF(tokens[4].line != 2);
@@ -55,8 +55,8 @@ static void test_compile(Memory* memory) {
         EXIT_IF(tokens[8].line != 4);
         EXIT_IF(tokens[9].tag != TOKEN_COMMA);
         EXIT_IF(tokens[9].line != 4);
-        EXIT_IF(tokens[10].tag != TOKEN_NUM);
-        EXIT_IF(tokens[10].number != 43);
+        EXIT_IF(tokens[10].tag != TOKEN_I32);
+        EXIT_IF(tokens[10].i32 != -43);
         EXIT_IF(tokens[10].line != 4);
         {
             EXIT_IF(tokens[11].tag != TOKEN_STR);
@@ -123,7 +123,7 @@ static void test_compile(Memory* memory) {
 
         EXIT_IF(insts[3].tag != INST_MOV_REG_IMM32);
         EXIT_IF(insts[3].dst.reg != REG_EAX);
-        EXIT_IF(insts[3].src.imm_i32 != 43);
+        EXIT_IF(insts[3].src.imm_i32 != -43);
         EXIT_IF(insts[3].position != 11);
         EXIT_IF(insts[3].size != 5);
 
@@ -179,7 +179,7 @@ static void test_emit_transform(Memory* memory) {
         emit_i32(memory, 6);         //  6 + 4 -> 10
         emit_ret(memory);            // 10 + 1 -> 11
         emit_mov_eax_imm32(memory);  // 11 + 1 -> 12
-        emit_i32(memory, x + 1);     // 12 + 4 -> 16
+        emit_i32(memory, -(x + 1));  // 12 + 4 -> 16
         EXIT_IF(memory->bytes_index != 16);
     }
     {

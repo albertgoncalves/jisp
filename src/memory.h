@@ -4,12 +4,12 @@
 #include "parse.h"
 #include "token.h"
 
-#define SIZE_FILE   184
-#define SIZE_TOKENS 32
-#define SIZE_BUFFER 20
+#define SIZE_FILE   256
+#define SIZE_TOKENS 64
+#define SIZE_BUFFER 32
 #define SIZE_INSTS  16
 #define SIZE_LABELS 4
-#define SIZE_BYTES  26
+#define SIZE_BYTES  64
 
 typedef struct {
     char  file[SIZE_FILE];

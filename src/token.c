@@ -72,6 +72,30 @@ static void set_tokens(Memory* memory) {
             ++i;
             break;
         }
+        case '-': {
+            EXIT_IF(memory->file_index <= ++i);
+            EXIT_IF(!('0' <= memory->file[i]) && (memory->file[i] <= '9'));
+            Token* token = alloc_token(memory);
+            token->tag = TOKEN_I32;
+            token->line = line;
+            {
+                usize j = i + 1;
+                for (; j < memory->file_index; ++j) {
+                    char x = memory->file[j];
+                    if (!(('0' <= x) && (x <= '9'))) {
+                        break;
+                    }
+                }
+                usize size = (j - i) + 1;
+                char* buffer = alloc_buffer(memory, size);
+                memcpy(buffer, &memory->file[i], size - 1);
+                i = j;
+                buffer[size - 1] = '\0';
+                token->i32 = -get_decimal_i32(buffer);
+                dealloc_buffer(memory, size);
+            }
+            break;
+        }
         default: {
             Token* token = alloc_token(memory);
             token->line = line;
@@ -91,8 +115,8 @@ static void set_tokens(Memory* memory) {
             i = j;
             buffer[size - 1] = '\0';
             if (('0' <= buffer[0]) && (buffer[0] <= '9')) {
-                token->tag = TOKEN_NUM;
-                token->number = get_decimal_i32(buffer);
+                token->tag = TOKEN_I32;
+                token->i32 = get_decimal_i32(buffer);
                 dealloc_buffer(memory, size);
 
             } else if (!memcmp(buffer, "rax", size)) {

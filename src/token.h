@@ -9,7 +9,7 @@ typedef enum {
     TOKEN_EBX,
     TOKEN_EDI,
 
-    TOKEN_NUM,
+    TOKEN_I32,
     TOKEN_STR,
 
     TOKEN_COMMA,
@@ -25,13 +25,13 @@ typedef enum {
 
 typedef struct {
     const char* string;
-    i32         number;
+    i32         i32;
     u16         line;
     TokenTag    tag;
 } Token;
 
 static Bool is_register(Token token) {
-    return token.tag < TOKEN_NUM;
+    return token.tag < TOKEN_I32;
 }
 
 #define FMT_LINE "( ln. %-3hu) "
@@ -82,8 +82,8 @@ static void print_token(File* stream, Token token) {
         fprintf(stream, FMT_LINE "ret", token.line);
         break;
     }
-    case TOKEN_NUM: {
-        fprintf(stream, FMT_LINE "%d", token.line, token.number);
+    case TOKEN_I32: {
+        fprintf(stream, FMT_LINE "%d", token.line, token.i32);
         break;
     }
     case TOKEN_STR: {

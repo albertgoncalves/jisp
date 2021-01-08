@@ -36,7 +36,7 @@ static Label* alloc_label(Memory* memory) {
 
 static Register get_register(TokenTag tag) {
     switch (tag) {
-    case TOKEN_NUM:
+    case TOKEN_I32:
     case TOKEN_STR:
     case TOKEN_COMMA:
     case TOKEN_COLON:
@@ -85,7 +85,7 @@ static void set_insts(Memory* memory) {
         case TOKEN_EBX:
         case TOKEN_EDI:
 
-        case TOKEN_NUM:
+        case TOKEN_I32:
         case TOKEN_COMMA:
         case TOKEN_COLON: {
             UNEXPECTED_TOKEN(token);
@@ -113,9 +113,9 @@ static void set_insts(Memory* memory) {
                     set_size_position(inst, &position, 2);
                     inst->tag = INST_MOV_REG_REG;
                     continue;
-                } else if (src.tag == TOKEN_NUM) {
+                } else if (src.tag == TOKEN_I32) {
                     inst->src = (Arg){
-                        .imm_i32 = src.number,
+                        .imm_i32 = src.i32,
                     };
                     set_size_position(inst, &position, 5);
                     inst->tag = INST_MOV_REG_IMM32;
@@ -134,9 +134,9 @@ static void set_insts(Memory* memory) {
                 inst->dst = (Arg){
                     .reg = get_register(dst.tag),
                 };
-                if (src.tag == TOKEN_NUM) {
+                if (src.tag == TOKEN_I32) {
                     inst->src = (Arg){
-                        .imm_i32 = src.number,
+                        .imm_i32 = src.i32,
                     };
                     set_size_position(inst, &position, 5);
                     inst->tag = INST_ADD_REG_IMM32;
@@ -176,9 +176,9 @@ static void set_insts(Memory* memory) {
             Token dst = pop_token(memory, &i);
             Inst* inst = alloc_inst(memory);
             set_size_position(inst, &position, 5);
-            if (dst.tag == TOKEN_NUM) {
+            if (dst.tag == TOKEN_I32) {
                 inst->dst = (Arg){
-                    .imm_i32 = dst.number,
+                    .imm_i32 = dst.i32,
                 };
                 inst->tag = INST_CALL_REL_IMM32;
                 continue;
