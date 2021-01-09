@@ -20,6 +20,14 @@
         memory->bytes[memory->bytes_index++] = b;        \
     }
 
+#define EMIT_3_BYTES(fn, a, b, c)                        \
+    static void fn(Memory* memory) {                     \
+        EXIT_IF(SIZE_BYTES < (memory->bytes_index + 3)); \
+        memory->bytes[memory->bytes_index++] = a;        \
+        memory->bytes[memory->bytes_index++] = b;        \
+        memory->bytes[memory->bytes_index++] = c;        \
+    }
+
 #define EMIT_1_VAR(fn, type)                                               \
     static void fn(Memory* memory, type value) {                           \
         EXIT_IF(SIZE_BYTES < (memory->bytes_index + sizeof(type)));        \
@@ -36,6 +44,9 @@ EMIT_1_BYTE(emit_call_rel_imm32, 0xE8)
 EMIT_1_BYTE(emit_ret, 0xC3)
 EMIT_2_BYTES(emit_mov_eax_ebx, 0x89, 0xD8)
 EMIT_2_BYTES(emit_mov_ebx_edi, 0x89, 0xFB)
+EMIT_3_BYTES(emit_mov_ebx_addr_rsp_offset, 0x8B, 0x9C, 0x24)
+EMIT_3_BYTES(emit_mov_addr_rsp_offset_eax, 0x89, 0x84, 0x24)
+EMIT_3_BYTES(emit_mov_addr_rsp_offset_edi, 0x89, 0xBC, 0x24)
 EMIT_1_VAR(emit_i32, i32) // NOTE: 4 bytes!
 
 static void check_size(Memory* memory, usize* position, usize size) {
@@ -48,10 +59,6 @@ static void set_bytes(Memory* memory) {
     for (usize i = 0; i < memory->insts_index; ++i) {
         Inst inst = memory->insts[i];
         switch (inst.tag) {
-        case INST_UNKNOWN:
-        case INST_CALL_REL_IMM32_UNRESOLVED: {
-            ERROR();
-        }
         case INST_MOV_REG_IMM32: {
             if (inst.dst.reg == REG_EAX) {
                 emit_mov_eax_imm32(memory);
@@ -74,6 +81,28 @@ static void set_bytes(Memory* memory) {
             } else {
                 ERROR();
             }
+            check_size(memory, &position, inst.size);
+            break;
+        }
+        case INST_MOV_REG_ADDR_RSP_OFFSET: {
+            if (inst.dst.reg == REG_EBX) {
+                emit_mov_ebx_addr_rsp_offset(memory);
+            } else {
+                ERROR();
+            }
+            emit_i32(memory, inst.src.addr_rsp_offset);
+            check_size(memory, &position, inst.size);
+            break;
+        }
+        case INST_MOV_ADDR_RSP_OFFSET_REG: {
+            if (inst.src.reg == REG_EAX) {
+                emit_mov_addr_rsp_offset_eax(memory);
+            } else if (inst.src.reg == REG_EDI) {
+                emit_mov_addr_rsp_offset_edi(memory);
+            } else {
+                ERROR();
+            }
+            emit_i32(memory, inst.dst.addr_rsp_offset);
             check_size(memory, &position, inst.size);
             break;
         }
@@ -115,6 +144,11 @@ static void set_bytes(Memory* memory) {
             emit_ret(memory);
             check_size(memory, &position, inst.size);
             break;
+        }
+        case INST_UNKNOWN:
+        case INST_CALL_REL_IMM32_UNRESOLVED:
+        default: {
+            ERROR();
         }
         }
     }

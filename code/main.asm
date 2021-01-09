@@ -3,7 +3,8 @@
     ret
 f:
     push    rbx
-    mov     ebx, edi
+    mov     [rsp - 4], edi
+    mov     ebx, [rsp - 4]
     mov     eax, ebx
     add     eax, -87
     pop     rbx

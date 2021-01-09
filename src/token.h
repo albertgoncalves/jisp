@@ -9,11 +9,18 @@ typedef enum {
     TOKEN_EBX,
     TOKEN_EDI,
 
+    TOKEN_RSP,
+
     TOKEN_I32,
     TOKEN_STR,
 
     TOKEN_COMMA,
     TOKEN_COLON,
+
+    TOKEN_LBRACKET,
+    TOKEN_RBRACKET,
+    TOKEN_PLUS,
+    TOKEN_MINUS,
 
     TOKEN_MOV,
     TOKEN_ADD,
@@ -29,10 +36,6 @@ typedef struct {
     u16         line;
     TokenTag    tag;
 } Token;
-
-static Bool is_register(Token token) {
-    return token.tag < TOKEN_I32;
-}
 
 #define FMT_LINE "( ln. %-3hu) "
 
@@ -56,6 +59,10 @@ static void print_token(File* stream, Token token) {
     }
     case TOKEN_EDI: {
         fprintf(stream, FMT_LINE "edi", token.line);
+        break;
+    }
+    case TOKEN_RSP: {
+        fprintf(stream, FMT_LINE "rsp", token.line);
         break;
     }
     case TOKEN_MOV: {
@@ -97,6 +104,25 @@ static void print_token(File* stream, Token token) {
     case TOKEN_COLON: {
         fprintf(stream, FMT_LINE ":", token.line);
         break;
+    }
+    case TOKEN_LBRACKET: {
+        fprintf(stream, FMT_LINE "[", token.line);
+        break;
+    }
+    case TOKEN_RBRACKET: {
+        fprintf(stream, FMT_LINE "]", token.line);
+        break;
+    }
+    case TOKEN_PLUS: {
+        fprintf(stream, FMT_LINE "+", token.line);
+        break;
+    }
+    case TOKEN_MINUS: {
+        fprintf(stream, FMT_LINE "-", token.line);
+        break;
+    }
+    default: {
+        ERROR();
     }
     }
     fprintf(stream, "\n");

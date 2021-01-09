@@ -72,13 +72,32 @@ static void set_tokens(Memory* memory) {
             ++i;
             break;
         }
+        case '[': {
+            Token* token = alloc_token(memory);
+            token->tag = TOKEN_LBRACKET;
+            token->line = line;
+            ++i;
+            break;
+        }
+        case ']': {
+            Token* token = alloc_token(memory);
+            token->tag = TOKEN_RBRACKET;
+            token->line = line;
+            ++i;
+            break;
+        }
+        case '+': {
+            Token* token = alloc_token(memory);
+            token->tag = TOKEN_PLUS;
+            token->line = line;
+            ++i;
+            break;
+        }
         case '-': {
             EXIT_IF(memory->file_index <= ++i);
-            EXIT_IF(!('0' <= memory->file[i]) && (memory->file[i] <= '9'));
             Token* token = alloc_token(memory);
-            token->tag = TOKEN_I32;
             token->line = line;
-            {
+            if (('0' <= memory->file[i]) && (memory->file[i] <= '9')) {
                 usize j = i + 1;
                 for (; j < memory->file_index; ++j) {
                     char x = memory->file[j];
@@ -91,8 +110,11 @@ static void set_tokens(Memory* memory) {
                 memcpy(buffer, &memory->file[i], size - 1);
                 i = j;
                 buffer[size - 1] = '\0';
+                token->tag = TOKEN_I32;
                 token->i32 = -get_decimal_i32(buffer);
                 dealloc_buffer(memory, size);
+            } else {
+                token->tag = TOKEN_MINUS;
             }
             break;
         }
@@ -134,6 +156,10 @@ static void set_tokens(Memory* memory) {
                 dealloc_buffer(memory, size);
             } else if (!memcmp(buffer, "edi", size)) {
                 token->tag = TOKEN_EDI;
+                dealloc_buffer(memory, size);
+
+            } else if (!memcmp(buffer, "rsp", size)) {
+                token->tag = TOKEN_RSP;
                 dealloc_buffer(memory, size);
 
             } else if (!memcmp(buffer, "mov", size)) {
