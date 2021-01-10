@@ -1,15 +1,31 @@
-    mov     edi, 1
     call    main
     ret
+
 f:
+    push    rbp
+    mov     rbp, rsp
+
     push    rbx
-    mov     [rsp - 4], edi
-    mov     ebx, [rsp - 4]
-    mov     eax, ebx
-    add     eax, -87
+
+    mov     eax, [rbp + 20]
+    mov     ebx, [rbp + 16]
+    sub     eax, ebx
+
     pop     rbx
+
+    mov     rsp, rbp
+    pop     rbp
     ret
+
 main:
-    mov     edi, 10
+    push    rbp
+    mov     rbp, rsp
+
+    sub     rsp, 8
+    mov     [rsp + 4], 45 ; => `[rbp - 4]`
+    mov     [rsp], 99     ; => `[rbp - 8]`
     call    f
+
+    mov     rsp, rbp
+    pop     rbp
     ret

@@ -421,18 +421,20 @@ static void test_compile_2(Memory* memory) {
         EXIT_IF(insts[3].position != 11);
         EXIT_IF(insts[3].size != 1);
 
-        EXIT_IF(insts[4].tag != INST_MOV_ADDR_RSP_OFFSET_REG);
-        EXIT_IF(insts[4].dst.addr_rsp_offset != -4);
+        EXIT_IF(insts[4].tag != INST_MOV_ADDR_OFFSET_REG);
+        EXIT_IF(insts[4].dst.reg != REG_RSP);
+        EXIT_IF(insts[4].dst.addr_offset != -4);
         EXIT_IF(insts[4].dst.line != 6);
         EXIT_IF(insts[4].src.reg != REG_EDI);
         EXIT_IF(insts[4].src.line != 6);
         EXIT_IF(insts[4].position != 12);
         EXIT_IF(insts[4].size != 7);
 
-        EXIT_IF(insts[5].tag != INST_MOV_REG_ADDR_RSP_OFFSET);
+        EXIT_IF(insts[5].tag != INST_MOV_REG_ADDR_OFFSET);
         EXIT_IF(insts[5].dst.reg != REG_EBX);
         EXIT_IF(insts[5].dst.line != 7);
-        EXIT_IF(insts[5].src.addr_rsp_offset != -4);
+        EXIT_IF(insts[5].src.reg != REG_RSP);
+        EXIT_IF(insts[5].src.addr_offset != -4);
         EXIT_IF(insts[5].src.line != 7);
         EXIT_IF(insts[5].position != 19);
         EXIT_IF(insts[5].size != 7);

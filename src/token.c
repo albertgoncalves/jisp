@@ -158,6 +158,9 @@ static void set_tokens(Memory* memory) {
                 token->tag = TOKEN_EDI;
                 dealloc_buffer(memory, size);
 
+            } else if (!memcmp(buffer, "rbp", size)) {
+                token->tag = TOKEN_RBP;
+                dealloc_buffer(memory, size);
             } else if (!memcmp(buffer, "rsp", size)) {
                 token->tag = TOKEN_RSP;
                 dealloc_buffer(memory, size);
@@ -167,6 +170,9 @@ static void set_tokens(Memory* memory) {
                 dealloc_buffer(memory, size);
             } else if (!memcmp(buffer, "add", size)) {
                 token->tag = TOKEN_ADD;
+                dealloc_buffer(memory, size);
+            } else if (!memcmp(buffer, "sub", size)) {
+                token->tag = TOKEN_SUB;
                 dealloc_buffer(memory, size);
             } else if (!memcmp(buffer, "push", size)) {
                 token->tag = TOKEN_PUSH;

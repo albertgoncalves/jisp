@@ -57,6 +57,7 @@ static Arg get_arg(Memory* memory, usize* i) {
     case TOKEN_MINUS:
     case TOKEN_MOV:
     case TOKEN_ADD:
+    case TOKEN_SUB:
     case TOKEN_PUSH:
     case TOKEN_POP:
     case TOKEN_CALL:
@@ -105,6 +106,13 @@ static Arg get_arg(Memory* memory, usize* i) {
             .line = token.line,
         };
     }
+    case TOKEN_RBP: {
+        return (Arg){
+            .reg = REG_RBP,
+            .tag = ARG_REG,
+            .line = token.line,
+        };
+    }
     case TOKEN_RSP: {
         return (Arg){
             .reg = REG_RSP,
@@ -120,7 +128,15 @@ static Arg get_arg(Memory* memory, usize* i) {
         };
     }
     case TOKEN_LBRACKET: {
-        EXPECTED_TOKEN(TOKEN_RSP, memory, i);
+        Register reg;
+        token = pop_token(memory, i);
+        if (token.tag == TOKEN_RBP) {
+            reg = REG_RBP;
+        } else if (token.tag == TOKEN_RSP) {
+            reg = REG_RSP;
+        } else {
+            UNEXPECTED_TOKEN(token);
+        }
         token = pop_token(memory, i);
         i32 offset;
         if (token.tag == TOKEN_RBRACKET) {
@@ -139,8 +155,9 @@ static Arg get_arg(Memory* memory, usize* i) {
             UNEXPECTED_TOKEN(token);
         }
         return (Arg){
-            .addr_rsp_offset = offset,
-            .tag = ARG_ADDR_RSP_OFFSET,
+            .addr_offset = offset,
+            .reg = reg,
+            .tag = ARG_ADDR_OFFSET,
             .line = token.line,
         };
     }
@@ -161,6 +178,7 @@ static void set_insts(Memory* memory) {
         case TOKEN_EAX:
         case TOKEN_EBX:
         case TOKEN_EDI:
+        case TOKEN_RBP:
         case TOKEN_RSP:
         case TOKEN_I32:
         case TOKEN_COMMA:
@@ -195,22 +213,50 @@ static void set_insts(Memory* memory) {
             if (dst.tag == ARG_REG) {
                 if (src.tag == ARG_REG) {
                     inst->tag = INST_MOV_REG_REG;
-                    set_size_position(inst, &position, 2);
+                    if (((dst.reg == REG_RBP) && (src.reg == REG_RSP)) ||
+                        ((dst.reg == REG_RSP) && (src.reg == REG_RBP)))
+                    {
+                        set_size_position(inst, &position, 3);
+                    } else {
+                        set_size_position(inst, &position, 2);
+                    }
                     continue;
                 } else if (src.tag == ARG_IMM_I32) {
                     inst->tag = INST_MOV_REG_IMM_I32;
                     set_size_position(inst, &position, 5);
                     continue;
-                } else if (src.tag == ARG_ADDR_RSP_OFFSET) {
-                    inst->tag = INST_MOV_REG_ADDR_RSP_OFFSET;
-                    set_size_position(inst, &position, 7);
+                } else if (src.tag == ARG_ADDR_OFFSET) {
+                    inst->tag = INST_MOV_REG_ADDR_OFFSET;
+                    if (src.reg == REG_RBP) {
+                        set_size_position(inst, &position, 6);
+                    } else if (src.reg == REG_RSP) {
+                        set_size_position(inst, &position, 7);
+                    } else {
+                        UNEXPECTED_ARG(src);
+                    }
                     continue;
                 }
                 UNEXPECTED_ARG(src);
-            } else if (dst.tag == ARG_ADDR_RSP_OFFSET) {
+            } else if (dst.tag == ARG_ADDR_OFFSET) {
                 if (src.tag == ARG_REG) {
-                    inst->tag = INST_MOV_ADDR_RSP_OFFSET_REG;
-                    set_size_position(inst, &position, 7);
+                    inst->tag = INST_MOV_ADDR_OFFSET_REG;
+                    if (dst.reg == REG_RBP) {
+                        set_size_position(inst, &position, 6);
+                    } else if (dst.reg == REG_RSP) {
+                        set_size_position(inst, &position, 7);
+                    } else {
+                        UNEXPECTED_ARG(dst);
+                    }
+                    continue;
+                } else if (src.tag == ARG_IMM_I32) {
+                    inst->tag = INST_MOV_ADDR_OFFSET_IMM_I32;
+                    if (dst.reg == REG_RBP) {
+                        set_size_position(inst, &position, 10);
+                    } else if (dst.reg == REG_RSP) {
+                        set_size_position(inst, &position, 11);
+                    } else {
+                        UNEXPECTED_ARG(dst);
+                    }
                     continue;
                 }
                 UNEXPECTED_ARG(src);
@@ -225,9 +271,38 @@ static void set_insts(Memory* memory) {
                 Inst* inst = alloc_inst(memory);
                 inst->dst = dst;
                 inst->src = src;
-                if (src.tag == ARG_IMM_I32) {
-                    inst->tag = INST_ADD_REG_IMM32;
+                if (src.tag == ARG_REG) {
+                    inst->tag = INST_ADD_REG_REG;
+                    set_size_position(inst, &position, 2);
+                    continue;
+                } else if (src.tag == ARG_IMM_I32) {
+                    inst->tag = INST_ADD_REG_IMM_I32;
                     set_size_position(inst, &position, 5);
+                    continue;
+                }
+                UNEXPECTED_ARG(src);
+            }
+            UNEXPECTED_ARG(dst);
+        }
+        case TOKEN_SUB: {
+            Arg dst = get_arg(memory, &i);
+            EXPECTED_TOKEN(TOKEN_COMMA, memory, &i);
+            Arg src = get_arg(memory, &i);
+            if (dst.tag == ARG_REG) {
+                Inst* inst = alloc_inst(memory);
+                inst->dst = dst;
+                inst->src = src;
+                if (src.tag == ARG_IMM_I32) {
+                    inst->tag = INST_SUB_REG_IMM_I32;
+                    if (dst.reg == REG_RSP) {
+                        set_size_position(inst, &position, 7);
+                    } else {
+                        set_size_position(inst, &position, 5);
+                    }
+                    continue;
+                } else if (src.tag == ARG_REG) {
+                    inst->tag = INST_SUB_REG_REG;
+                    set_size_position(inst, &position, 2);
                     continue;
                 }
                 UNEXPECTED_ARG(src);
@@ -241,6 +316,12 @@ static void set_insts(Memory* memory) {
                 inst->src = src;
                 inst->tag = INST_PUSH_REG;
                 set_size_position(inst, &position, 1);
+                continue;
+            } else if (src.tag == ARG_IMM_I32) {
+                Inst* inst = alloc_inst(memory);
+                inst->src = src;
+                inst->tag = INST_PUSH_IMM_I32;
+                set_size_position(inst, &position, 5);
                 continue;
             }
             UNEXPECTED_ARG(src);
