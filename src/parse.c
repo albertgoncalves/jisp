@@ -129,14 +129,15 @@ static Arg get_arg(Memory* memory, usize* i) {
             token = pop_token(memory, i);
             EXIT_IF(token.tag != TOKEN_I32);
             offset = token.i32;
+            EXPECTED_TOKEN(TOKEN_RBRACKET, memory, i);
         } else if (token.tag == TOKEN_MINUS) {
             token = pop_token(memory, i);
             EXIT_IF(token.tag != TOKEN_I32);
             offset = -token.i32;
+            EXPECTED_TOKEN(TOKEN_RBRACKET, memory, i);
         } else {
             UNEXPECTED_TOKEN(token);
         }
-        EXPECTED_TOKEN(TOKEN_RBRACKET, memory, i);
         return (Arg){
             .addr_rsp_offset = offset,
             .tag = ARG_ADDR_RSP_OFFSET,
@@ -197,7 +198,7 @@ static void set_insts(Memory* memory) {
                     set_size_position(inst, &position, 2);
                     continue;
                 } else if (src.tag == ARG_IMM_I32) {
-                    inst->tag = INST_MOV_REG_IMM32;
+                    inst->tag = INST_MOV_REG_IMM_I32;
                     set_size_position(inst, &position, 5);
                     continue;
                 } else if (src.tag == ARG_ADDR_RSP_OFFSET) {
@@ -261,10 +262,10 @@ static void set_insts(Memory* memory) {
             inst->dst = dst;
             set_size_position(inst, &position, 5);
             if (dst.tag == ARG_IMM_I32) {
-                inst->tag = INST_CALL_REL_IMM32;
+                inst->tag = INST_CALL_REL_IMM_I32;
                 continue;
             } else if (dst.tag == ARG_LABEL) {
-                inst->tag = INST_CALL_REL_IMM32_UNRESOLVED;
+                inst->tag = INST_CALL_REL_IMM_I32_UNRESOLVED;
                 continue;
             }
             UNEXPECTED_ARG(dst);
@@ -297,8 +298,8 @@ static void resolve_insts(Memory* memory) {
         Inst* inst = &memory->insts[i];
         if (inst->tag == INST_UNKNOWN) {
             ERROR();
-        } else if (inst->tag == INST_CALL_REL_IMM32_UNRESOLVED) {
-            inst->tag = INST_CALL_REL_IMM32;
+        } else if (inst->tag == INST_CALL_REL_IMM_I32_UNRESOLVED) {
+            inst->tag = INST_CALL_REL_IMM_I32;
             inst->dst.imm_i32 =
                 ((i32)lookup_label_position(memory, inst->dst.label)) -
                 ((i32)(inst->position + inst->size));

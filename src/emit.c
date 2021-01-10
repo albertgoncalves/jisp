@@ -49,26 +49,27 @@ EMIT_3_BYTES(emit_mov_addr_rsp_offset_eax, 0x89, 0x84, 0x24)
 EMIT_3_BYTES(emit_mov_addr_rsp_offset_edi, 0x89, 0xBC, 0x24)
 EMIT_1_VAR(emit_i32, i32) // NOTE: 4 bytes!
 
-static void check_size(Memory* memory, usize* position, usize size) {
-    EXIT_IF((memory->bytes_index - *position) != size);
-    *position += size;
-}
+#define CHECK_SIZE(memory, position, size)                 \
+    {                                                      \
+        EXIT_IF((memory->bytes_index - position) != size); \
+        position += size;                                  \
+    }
 
 static void set_bytes(Memory* memory) {
     usize position = 0;
     for (usize i = 0; i < memory->insts_index; ++i) {
         Inst inst = memory->insts[i];
         switch (inst.tag) {
-        case INST_MOV_REG_IMM32: {
+        case INST_MOV_REG_IMM_I32: {
             if (inst.dst.reg == REG_EAX) {
-                emit_mov_eax_imm32(memory);
+                emit_mov_eax_imm_i32(memory);
             } else if (inst.dst.reg == REG_EDI) {
-                emit_mov_edi_imm32(memory);
+                emit_mov_edi_imm_i32(memory);
             } else {
                 ERROR();
             }
             emit_i32(memory, inst.src.imm_i32);
-            check_size(memory, &position, inst.size);
+            CHECK_SIZE(memory, position, inst.size);
             break;
         }
         case INST_MOV_REG_REG: {
@@ -81,7 +82,7 @@ static void set_bytes(Memory* memory) {
             } else {
                 ERROR();
             }
-            check_size(memory, &position, inst.size);
+            CHECK_SIZE(memory, position, inst.size);
             break;
         }
         case INST_MOV_REG_ADDR_RSP_OFFSET: {
@@ -91,7 +92,7 @@ static void set_bytes(Memory* memory) {
                 ERROR();
             }
             emit_i32(memory, inst.src.addr_rsp_offset);
-            check_size(memory, &position, inst.size);
+            CHECK_SIZE(memory, position, inst.size);
             break;
         }
         case INST_MOV_ADDR_RSP_OFFSET_REG: {
@@ -103,17 +104,17 @@ static void set_bytes(Memory* memory) {
                 ERROR();
             }
             emit_i32(memory, inst.dst.addr_rsp_offset);
-            check_size(memory, &position, inst.size);
+            CHECK_SIZE(memory, position, inst.size);
             break;
         }
-        case INST_ADD_REG_IMM32: {
+        case INST_ADD_REG_IMM_I32: {
             if (inst.dst.reg == REG_EAX) {
-                emit_add_eax_imm32(memory);
+                emit_add_eax_imm_i32(memory);
             } else {
                 ERROR();
             }
             emit_i32(memory, inst.src.imm_i32);
-            check_size(memory, &position, inst.size);
+            CHECK_SIZE(memory, position, inst.size);
             break;
         }
         case INST_PUSH_REG: {
@@ -122,7 +123,7 @@ static void set_bytes(Memory* memory) {
             } else {
                 ERROR();
             }
-            check_size(memory, &position, inst.size);
+            CHECK_SIZE(memory, position, inst.size);
             break;
         }
         case INST_POP_REG: {
@@ -131,22 +132,22 @@ static void set_bytes(Memory* memory) {
             } else {
                 ERROR();
             }
-            check_size(memory, &position, inst.size);
+            CHECK_SIZE(memory, position, inst.size);
             break;
         }
-        case INST_CALL_REL_IMM32: {
-            emit_call_rel_imm32(memory);
+        case INST_CALL_REL_IMM_I32: {
+            emit_call_rel_imm_i32(memory);
             emit_i32(memory, inst.dst.imm_i32);
-            check_size(memory, &position, inst.size);
+            CHECK_SIZE(memory, position, inst.size);
             break;
         }
         case INST_RET: {
             emit_ret(memory);
-            check_size(memory, &position, inst.size);
+            CHECK_SIZE(memory, position, inst.size);
             break;
         }
         case INST_UNKNOWN:
-        case INST_CALL_REL_IMM32_UNRESOLVED:
+        case INST_CALL_REL_IMM_I32_UNRESOLVED:
         default: {
             ERROR();
         }

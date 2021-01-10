@@ -129,7 +129,7 @@ static void test_compile_1(Memory* memory) {
         resolve_insts(memory);
         Inst* insts = memory->insts;
 
-        EXIT_IF(insts[0].tag != INST_MOV_REG_IMM32);
+        EXIT_IF(insts[0].tag != INST_MOV_REG_IMM_I32);
         EXIT_IF(insts[0].dst.reg != REG_EDI);
         EXIT_IF(insts[0].dst.line != 1);
         EXIT_IF(insts[0].src.imm_i32 != 42);
@@ -137,7 +137,7 @@ static void test_compile_1(Memory* memory) {
         EXIT_IF(insts[0].position != 0);
         EXIT_IF(insts[0].size != 5);
 
-        EXIT_IF(insts[1].tag != INST_CALL_REL_IMM32);
+        EXIT_IF(insts[1].tag != INST_CALL_REL_IMM_I32);
         EXIT_IF(insts[1].dst.imm_i32 != 6);
         EXIT_IF(insts[1].dst.line != 2);
         EXIT_IF(insts[1].position != 5);
@@ -147,7 +147,7 @@ static void test_compile_1(Memory* memory) {
         EXIT_IF(insts[2].position != 10);
         EXIT_IF(insts[2].size != 1);
 
-        EXIT_IF(insts[3].tag != INST_MOV_REG_IMM32);
+        EXIT_IF(insts[3].tag != INST_MOV_REG_IMM_I32);
         EXIT_IF(insts[3].dst.reg != REG_EAX);
         EXIT_IF(insts[3].dst.line != 4);
         EXIT_IF(insts[3].src.imm_i32 != -43);
@@ -397,7 +397,7 @@ static void test_compile_2(Memory* memory) {
         resolve_insts(memory);
         Inst* insts = memory->insts;
 
-        EXIT_IF(insts[0].tag != INST_MOV_REG_IMM32);
+        EXIT_IF(insts[0].tag != INST_MOV_REG_IMM_I32);
         EXIT_IF(insts[0].dst.reg != REG_EDI);
         EXIT_IF(insts[0].dst.line != 1);
         EXIT_IF(insts[0].src.imm_i32 != 1);
@@ -405,7 +405,7 @@ static void test_compile_2(Memory* memory) {
         EXIT_IF(insts[0].position != 0);
         EXIT_IF(insts[0].size != 5);
 
-        EXIT_IF(insts[1].tag != INST_CALL_REL_IMM32);
+        EXIT_IF(insts[1].tag != INST_CALL_REL_IMM_I32);
         EXIT_IF(insts[1].dst.imm_i32 != 25);
         EXIT_IF(insts[1].dst.line != 2);
         EXIT_IF(insts[1].position != 5);
@@ -445,7 +445,7 @@ static void test_compile_2(Memory* memory) {
         EXIT_IF(insts[6].position != 26);
         EXIT_IF(insts[6].size != 2);
 
-        EXIT_IF(insts[7].tag != INST_ADD_REG_IMM32);
+        EXIT_IF(insts[7].tag != INST_ADD_REG_IMM_I32);
         EXIT_IF(insts[7].dst.reg != REG_EAX);
         EXIT_IF(insts[7].dst.line != 9);
         EXIT_IF(insts[7].src.imm_i32 != -87);
@@ -463,7 +463,7 @@ static void test_compile_2(Memory* memory) {
         EXIT_IF(insts[9].position != 34);
         EXIT_IF(insts[9].size != 1);
 
-        EXIT_IF(insts[10].tag != INST_MOV_REG_IMM32);
+        EXIT_IF(insts[10].tag != INST_MOV_REG_IMM_I32);
         EXIT_IF(insts[10].dst.reg != REG_EDI);
         EXIT_IF(insts[10].dst.line != 13);
         EXIT_IF(insts[10].src.imm_i32 != 10);
@@ -471,7 +471,7 @@ static void test_compile_2(Memory* memory) {
         EXIT_IF(insts[10].position != 35);
         EXIT_IF(insts[10].size != 5);
 
-        EXIT_IF(insts[11].tag != INST_CALL_REL_IMM32);
+        EXIT_IF(insts[11].tag != INST_CALL_REL_IMM_I32);
         EXIT_IF(insts[11].dst.imm_i32 != -34);
         EXIT_IF(insts[11].dst.line != 14);
         EXIT_IF(insts[11].position != 40);
@@ -501,13 +501,13 @@ static void test_emit_transform(Memory* memory) {
          *     -10-     ret
          *     -11-     mov     eax, `-(x + 1)` ; NOTE: Never evaluated!
          */
-        emit_mov_edi_imm32(memory);  //  0 + 1 ->  1
-        emit_i32(memory, x);         //  1 + 4 ->  5
-        emit_call_rel_imm32(memory); //  5 + 1 ->  6
-        emit_i32(memory, 6);         //  6 + 4 -> 10
-        emit_ret(memory);            // 10 + 1 -> 11
-        emit_mov_eax_imm32(memory);  // 11 + 1 -> 12
-        emit_i32(memory, -(x + 1));  // 12 + 4 -> 16
+        emit_mov_edi_imm_i32(memory);  //  0 + 1 ->  1
+        emit_i32(memory, x);           //  1 + 4 ->  5
+        emit_call_rel_imm_i32(memory); //  5 + 1 ->  6
+        emit_i32(memory, 6);           //  6 + 4 -> 10
+        emit_ret(memory);              // 10 + 1 -> 11
+        emit_mov_eax_imm_i32(memory);  // 11 + 1 -> 12
+        emit_i32(memory, -(x + 1));    // 12 + 4 -> 16
         EXIT_IF(memory->bytes_index != 16);
     }
     {
