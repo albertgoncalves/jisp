@@ -13,11 +13,6 @@ typedef int32_t i32;
 
 typedef FILE File;
 
-typedef enum {
-    FALSE = 0,
-    TRUE,
-} Bool;
-
 #define ERROR()                                                      \
     {                                                                \
         fprintf(stderr, "%s:%s:%d\n", __FILE__, __func__, __LINE__); \
