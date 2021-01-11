@@ -26,13 +26,6 @@ static Label* alloc_label(Memory* memory) {
         exit(EXIT_FAILURE);                                          \
     }
 
-#define UNEXPECTED_ARG(arg)                                          \
-    {                                                                \
-        fprintf(stderr, "%s:%s:%d\n", __FILE__, __func__, __LINE__); \
-        print_arg(stderr, arg);                                      \
-        exit(EXIT_FAILURE);                                          \
-    }
-
 #define EXPECTED_TOKEN(token_tag, memory, i) \
     {                                        \
         Token _ = pop_token(memory, i);      \

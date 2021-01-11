@@ -6,6 +6,7 @@
 
 #include "emit.h"
 #include "memory.h"
+#include "parse.h"
 
 #define EMIT_1_BYTE(fn, x)                          \
     static void fn(Memory* memory) {                \
@@ -90,25 +91,39 @@ static void set_bytes(Memory* memory) {
             } else if (inst.dst.reg == REG_EDI) {
                 emit_mov_edi_imm_i32(memory);
             } else {
-                ERROR();
+                UNEXPECTED_ARG(inst.dst);
             }
             emit_i32(memory, inst.src.imm_i32);
             CHECK_SIZE(memory, position, inst.size);
             break;
         }
         case INST_MOV_REG_REG: {
-            Register dst = inst.dst.reg;
-            Register src = inst.src.reg;
-            if ((dst == REG_EAX) && (src == REG_EBX)) {
-                emit_mov_eax_ebx(memory);
-            } else if ((dst == REG_EBX) && (src == REG_EDI)) {
-                emit_mov_ebx_edi(memory);
-            } else if ((dst == REG_RBP) && (src == REG_RSP)) {
-                emit_mov_rbp_rsp(memory);
-            } else if ((dst == REG_RSP) && (src == REG_RBP)) {
-                emit_mov_rsp_rbp(memory);
+            if (inst.dst.reg == REG_EAX) {
+                if (inst.src.reg == REG_EBX) {
+                    emit_mov_eax_ebx(memory);
+                } else {
+                    UNEXPECTED_ARG(inst.src);
+                }
+            } else if (inst.dst.reg == REG_EBX) {
+                if (inst.src.reg == REG_EDI) {
+                    emit_mov_ebx_edi(memory);
+                } else {
+                    UNEXPECTED_ARG(inst.src);
+                }
+            } else if (inst.dst.reg == REG_RBP) {
+                if (inst.src.reg == REG_RSP) {
+                    emit_mov_rbp_rsp(memory);
+                } else {
+                    UNEXPECTED_ARG(inst.src);
+                }
+            } else if (inst.dst.reg == REG_RSP) {
+                if (inst.src.reg == REG_RBP) {
+                    emit_mov_rsp_rbp(memory);
+                } else {
+                    UNEXPECTED_ARG(inst.src);
+                }
             } else {
-                ERROR();
+                UNEXPECTED_ARG(inst.dst);
             }
             CHECK_SIZE(memory, position, inst.size);
             break;
@@ -120,7 +135,7 @@ static void set_bytes(Memory* memory) {
                 } else if (inst.dst.reg == REG_EBX) {
                     emit_mov_ebx_addr_rbp_offset(memory);
                 } else {
-                    ERROR();
+                    UNEXPECTED_ARG(inst.dst);
                 }
             } else if (inst.src.reg == REG_RSP) {
                 if (inst.dst.reg == REG_EAX) {
@@ -128,10 +143,10 @@ static void set_bytes(Memory* memory) {
                 } else if (inst.dst.reg == REG_EBX) {
                     emit_mov_ebx_addr_rsp_offset(memory);
                 } else {
-                    ERROR();
+                    UNEXPECTED_ARG(inst.dst);
                 }
             } else {
-                ERROR();
+                UNEXPECTED_ARG(inst.src);
             }
             emit_i32(memory, inst.src.addr_offset);
             CHECK_SIZE(memory, position, inst.size);
@@ -142,7 +157,7 @@ static void set_bytes(Memory* memory) {
                 if (inst.src.reg == REG_EAX) {
                     emit_mov_addr_rbp_offset_eax(memory);
                 } else {
-                    ERROR();
+                    UNEXPECTED_ARG(inst.src);
                 }
             } else if (inst.dst.reg == REG_RSP) {
                 if (inst.src.reg == REG_EAX) {
@@ -150,10 +165,10 @@ static void set_bytes(Memory* memory) {
                 } else if (inst.src.reg == REG_EDI) {
                     emit_mov_addr_rsp_offset_edi(memory);
                 } else {
-                    ERROR();
+                    UNEXPECTED_ARG(inst.src);
                 }
             } else {
-                ERROR();
+                UNEXPECTED_ARG(inst.dst);
             }
             emit_i32(memory, inst.dst.addr_offset);
             CHECK_SIZE(memory, position, inst.size);
@@ -165,7 +180,7 @@ static void set_bytes(Memory* memory) {
             } else if (inst.dst.reg == REG_RSP) {
                 emit_mov_addr_rsp_offset_imm_i32(memory);
             } else {
-                ERROR();
+                UNEXPECTED_ARG(inst.dst);
             }
             emit_i32(memory, inst.dst.addr_offset);
             emit_i32(memory, inst.src.imm_i32);
@@ -173,10 +188,14 @@ static void set_bytes(Memory* memory) {
             break;
         }
         case INST_ADD_REG_REG: {
-            if ((inst.dst.reg == REG_EAX) && (inst.src.reg == REG_EBX)) {
-                emit_add_eax_ebx(memory);
+            if (inst.dst.reg == REG_EAX) {
+                if (inst.src.reg == REG_EBX) {
+                    emit_add_eax_ebx(memory);
+                } else {
+                    UNEXPECTED_ARG(inst.src);
+                }
             } else {
-                ERROR();
+                UNEXPECTED_ARG(inst.dst);
             }
             CHECK_SIZE(memory, position, inst.size);
             break;
@@ -185,17 +204,21 @@ static void set_bytes(Memory* memory) {
             if (inst.dst.reg == REG_EAX) {
                 emit_add_eax_imm_i32(memory);
             } else {
-                ERROR();
+                UNEXPECTED_ARG(inst.dst);
             }
             emit_i32(memory, inst.src.imm_i32);
             CHECK_SIZE(memory, position, inst.size);
             break;
         }
         case INST_SUB_REG_REG: {
-            if ((inst.dst.reg == REG_EAX) && (inst.src.reg == REG_EBX)) {
-                emit_sub_eax_ebx(memory);
+            if (inst.dst.reg == REG_EAX) {
+                if (inst.src.reg == REG_EBX) {
+                    emit_sub_eax_ebx(memory);
+                } else {
+                    UNEXPECTED_ARG(inst.src);
+                }
             } else {
-                ERROR();
+                UNEXPECTED_ARG(inst.dst);
             }
             CHECK_SIZE(memory, position, inst.size);
             break;
@@ -206,7 +229,7 @@ static void set_bytes(Memory* memory) {
             } else if (inst.dst.reg == REG_RSP) {
                 emit_sub_rsp_imm_i32(memory);
             } else {
-                ERROR();
+                UNEXPECTED_ARG(inst.dst);
             }
             emit_i32(memory, inst.src.imm_i32);
             CHECK_SIZE(memory, position, inst.size);
@@ -218,7 +241,7 @@ static void set_bytes(Memory* memory) {
             } else if (inst.src.reg == REG_RBP) {
                 emit_push_rbp(memory);
             } else {
-                ERROR();
+                UNEXPECTED_ARG(inst.src);
             }
             CHECK_SIZE(memory, position, inst.size);
             break;
@@ -235,7 +258,7 @@ static void set_bytes(Memory* memory) {
             } else if (inst.dst.reg == REG_RBP) {
                 emit_pop_rbp(memory);
             } else {
-                ERROR();
+                UNEXPECTED_ARG(inst.dst);
             }
             CHECK_SIZE(memory, position, inst.size);
             break;
