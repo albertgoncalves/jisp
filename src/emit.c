@@ -6,7 +6,6 @@
 
 #include "emit.h"
 #include "memory.h"
-#include "parse.h"
 
 #define EMIT_1_BYTE(fn, x)                          \
     static void fn(Memory* memory) {                \
