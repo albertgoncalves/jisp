@@ -119,6 +119,13 @@ static Arg get_arg(Memory* memory, usize* i) {
             .line = token.line,
         };
     }
+    case TOKEN_F32: {
+        return (Arg){
+            .imm_f32 = token.f32,
+            .tag = ARG_IMM_F32,
+            .line = token.line,
+        };
+    }
     case TOKEN_LBRACKET: {
         Register reg;
         token = pop_token(memory, i);
@@ -160,6 +167,8 @@ static Arg get_arg(Memory* memory, usize* i) {
     UNEXPECTED_TOKEN(token);
 }
 
+#define EITHER(x, a, b) (((x) == (a)) || ((x) == (b)))
+
 static void set_insts(Memory* memory) {
     u16 position = 0;
     for (usize i = 0; i < memory->tokens_index;) {
@@ -173,6 +182,7 @@ static void set_insts(Memory* memory) {
         case TOKEN_RBP:
         case TOKEN_RSP:
         case TOKEN_I32:
+        case TOKEN_F32:
         case TOKEN_COMMA:
         case TOKEN_COLON:
         case TOKEN_LBRACKET:
@@ -240,7 +250,7 @@ static void set_insts(Memory* memory) {
                         UNEXPECTED_ARG(dst);
                     }
                     continue;
-                } else if (src.tag == ARG_IMM_I32) {
+                } else if (EITHER(src.tag, ARG_IMM_I32, ARG_IMM_F32)) {
                     inst->tag = INST_MOV_ADDR_OFFSET_IMM_I32;
                     if (dst.reg == REG_RBP) {
                         set_size_position(inst, &position, 10);
@@ -263,13 +273,17 @@ static void set_insts(Memory* memory) {
                 Inst* inst = alloc_inst(memory);
                 inst->dst = dst;
                 inst->src = src;
-                if (src.tag == ARG_REG) {
+                if (src.tag == ARG_IMM_I32) {
+                    inst->tag = INST_ADD_REG_IMM_I32;
+                    if (dst.reg == REG_RSP) {
+                        set_size_position(inst, &position, 7);
+                    } else {
+                        set_size_position(inst, &position, 5);
+                    }
+                    continue;
+                } else if (src.tag == ARG_REG) {
                     inst->tag = INST_ADD_REG_REG;
                     set_size_position(inst, &position, 2);
-                    continue;
-                } else if (src.tag == ARG_IMM_I32) {
-                    inst->tag = INST_ADD_REG_IMM_I32;
-                    set_size_position(inst, &position, 5);
                     continue;
                 }
                 UNEXPECTED_ARG(src);

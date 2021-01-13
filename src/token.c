@@ -20,17 +20,23 @@ static char* alloc_buffer(Memory* memory, usize size) {
 
 #define IS_DIGIT(x) (('0' <= (x)) && ((x) <= '9'))
 
-#define PARSE_DIGITS(fn, type)                               \
-    static type fn(Memory* memory, usize* i) {               \
-        type x = 0;                                          \
-        while (IS_DIGIT(memory->file[*i])) {                 \
-            x = (x * 10) + ((type)(memory->file[*i] - '0')); \
-            ++(*i);                                          \
-        }                                                    \
-        return x;                                            \
+static i32 parse_digits_i32(Memory* memory, usize* i) {
+    i32 x = 0;
+    while (IS_DIGIT(memory->file[*i])) {
+        x = (x * 10) + ((i32)(memory->file[(*i)++] - '0'));
     }
+    return x;
+}
 
-PARSE_DIGITS(parse_digits_i32, i32)
+static f32 parse_decimal_f32(Memory* memory, usize* i) {
+    f32 a = 0.0f;
+    f32 b = 1.0f;
+    while (IS_DIGIT(memory->file[*i])) {
+        a = (a * 10.0f) + ((f32)(memory->file[(*i)++] - '0'));
+        b *= 10.0f;
+    }
+    return a / b;
+}
 
 static void set_tokens(Memory* memory) {
     u16 line = 1;
@@ -94,8 +100,15 @@ static void set_tokens(Memory* memory) {
             Token* token = alloc_token(memory);
             token->line = line;
             if (IS_DIGIT(memory->file[i])) {
-                token->i32 = -parse_digits_i32(memory, &i);
-                token->tag = TOKEN_I32;
+                i32 x = parse_digits_i32(memory, &i);
+                if (memory->file[i] == '.') {
+                    ++i;
+                    token->f32 = -((f32)x + parse_decimal_f32(memory, &i));
+                    token->tag = TOKEN_F32;
+                } else {
+                    token->i32 = -x;
+                    token->tag = TOKEN_I32;
+                }
             } else {
                 token->tag = TOKEN_MINUS;
             }
@@ -105,8 +118,15 @@ static void set_tokens(Memory* memory) {
             Token* token = alloc_token(memory);
             token->line = line;
             if (IS_DIGIT(memory->file[i])) {
-                token->i32 = parse_digits_i32(memory, &i);
-                token->tag = TOKEN_I32;
+                i32 x = parse_digits_i32(memory, &i);
+                if (memory->file[i] == '.') {
+                    ++i;
+                    token->f32 = (f32)x + parse_decimal_f32(memory, &i);
+                    token->tag = TOKEN_F32;
+                } else {
+                    token->i32 = x;
+                    token->tag = TOKEN_I32;
+                }
                 continue;
             }
             usize j = i;

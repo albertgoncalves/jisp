@@ -57,6 +57,7 @@ EMIT_3_BYTES(emit_mov_addr_rsp_offset_edi, 0x89, 0xBC, 0x24)
 
 EMIT_2_BYTES(emit_add_eax_ebx, 0x01, 0xD8)
 EMIT_1_BYTE(emit_add_eax_imm_i32, 0x05)
+EMIT_3_BYTES(emit_add_rsp_imm_i32, 0x48, 0x81, 0xC4)
 
 EMIT_2_BYTES(emit_sub_eax_ebx, 0x29, 0xD8)
 EMIT_1_BYTE(emit_sub_eax_imm_i32, 0x2D)
@@ -202,6 +203,8 @@ static void set_bytes(Memory* memory) {
         case INST_ADD_REG_IMM_I32: {
             if (inst.dst.reg == REG_EAX) {
                 emit_add_eax_imm_i32(memory);
+            } else if (inst.dst.reg == REG_RSP) {
+                emit_add_rsp_imm_i32(memory);
             } else {
                 UNEXPECTED_ARG(inst.dst);
             }

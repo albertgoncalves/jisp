@@ -44,6 +44,7 @@ typedef enum {
 typedef enum {
     ARG_LABEL,
     ARG_IMM_I32,
+    ARG_IMM_F32,
     ARG_ADDR_OFFSET,
     ARG_REG,
 } ArgTag;
@@ -52,6 +53,7 @@ typedef struct {
     union {
         const char* label;
         i32         imm_i32;
+        f32         imm_f32;
         i32         addr_offset;
     };
     u16      line;
@@ -116,6 +118,10 @@ static void print_arg(File* stream, Arg arg) {
     }
     case ARG_IMM_I32: {
         fprintf(stream, FMT_LINE "%d", arg.line, arg.imm_i32);
+        break;
+    }
+    case ARG_IMM_F32: {
+        fprintf(stream, FMT_LINE "%f", arg.line, (f64)arg.imm_f32);
         break;
     }
     case ARG_ADDR_OFFSET: {

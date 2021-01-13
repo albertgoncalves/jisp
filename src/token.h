@@ -13,6 +13,7 @@ typedef enum {
     TOKEN_RSP,
 
     TOKEN_I32,
+    TOKEN_F32,
     TOKEN_STR,
 
     TOKEN_COMMA,
@@ -34,9 +35,12 @@ typedef enum {
 
 typedef struct {
     const char* string;
-    i32         i32;
-    u16         line;
-    TokenTag    tag;
+    union {
+        i32 i32;
+        f32 f32;
+    };
+    u16      line;
+    TokenTag tag;
 } Token;
 
 #define FMT_LINE "( ln. %-3hu) "
@@ -101,6 +105,10 @@ static void print_token(File* stream, Token token) {
     }
     case TOKEN_I32: {
         fprintf(stream, FMT_LINE "%d", token.line, token.i32);
+        break;
+    }
+    case TOKEN_F32: {
+        fprintf(stream, FMT_LINE "%f", token.line, (f64)token.f32);
         break;
     }
     case TOKEN_STR: {
