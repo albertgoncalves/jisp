@@ -15,11 +15,6 @@ static char* alloc_buffer(Memory* memory, usize size) {
     return buffer;
 }
 
-static void dealloc_buffer(Memory* memory, usize size) {
-    EXIT_IF(memory->buffer_index < size);
-    memory->buffer_index -= size;
-}
-
 #define IS_ALPHA(x) \
     ((('A' <= (x)) && ((x) <= 'Z')) || (('a' <= (x)) && ((x) <= 'z')))
 
@@ -122,61 +117,46 @@ static void set_tokens(Memory* memory) {
             }
             EXIT_IF(i == j);
             usize size = j - i;
-            char* buffer = alloc_buffer(memory, size);
-            memcpy(buffer, &memory->file[i], size);
-            i = j;
-            if (!memcmp(buffer, "rax", size)) {
+            if (!memcmp(&memory->file[i], "rax", size)) {
                 token->tag = TOKEN_RAX;
-                dealloc_buffer(memory, size);
-            } else if (!memcmp(buffer, "rbx", size)) {
+            } else if (!memcmp(&memory->file[i], "rbx", size)) {
                 token->tag = TOKEN_RBX;
-                dealloc_buffer(memory, size);
 
-            } else if (!memcmp(buffer, "eax", size)) {
+            } else if (!memcmp(&memory->file[i], "eax", size)) {
                 token->tag = TOKEN_EAX;
-                dealloc_buffer(memory, size);
-            } else if (!memcmp(buffer, "ebx", size)) {
+            } else if (!memcmp(&memory->file[i], "ebx", size)) {
                 token->tag = TOKEN_EBX;
-                dealloc_buffer(memory, size);
-            } else if (!memcmp(buffer, "edi", size)) {
+            } else if (!memcmp(&memory->file[i], "edi", size)) {
                 token->tag = TOKEN_EDI;
-                dealloc_buffer(memory, size);
 
-            } else if (!memcmp(buffer, "rbp", size)) {
+            } else if (!memcmp(&memory->file[i], "rbp", size)) {
                 token->tag = TOKEN_RBP;
-                dealloc_buffer(memory, size);
-            } else if (!memcmp(buffer, "rsp", size)) {
+            } else if (!memcmp(&memory->file[i], "rsp", size)) {
                 token->tag = TOKEN_RSP;
-                dealloc_buffer(memory, size);
 
-            } else if (!memcmp(buffer, "mov", size)) {
+            } else if (!memcmp(&memory->file[i], "mov", size)) {
                 token->tag = TOKEN_MOV;
-                dealloc_buffer(memory, size);
-            } else if (!memcmp(buffer, "add", size)) {
+            } else if (!memcmp(&memory->file[i], "add", size)) {
                 token->tag = TOKEN_ADD;
-                dealloc_buffer(memory, size);
-            } else if (!memcmp(buffer, "sub", size)) {
+            } else if (!memcmp(&memory->file[i], "sub", size)) {
                 token->tag = TOKEN_SUB;
-                dealloc_buffer(memory, size);
-            } else if (!memcmp(buffer, "push", size)) {
+            } else if (!memcmp(&memory->file[i], "push", size)) {
                 token->tag = TOKEN_PUSH;
-                dealloc_buffer(memory, size);
-            } else if (!memcmp(buffer, "pop", size)) {
+            } else if (!memcmp(&memory->file[i], "pop", size)) {
                 token->tag = TOKEN_POP;
-                dealloc_buffer(memory, size);
-            } else if (!memcmp(buffer, "call", size)) {
+            } else if (!memcmp(&memory->file[i], "call", size)) {
                 token->tag = TOKEN_CALL;
-                dealloc_buffer(memory, size);
-            } else if (!memcmp(buffer, "ret", size)) {
+            } else if (!memcmp(&memory->file[i], "ret", size)) {
                 token->tag = TOKEN_RET;
-                dealloc_buffer(memory, size);
 
             } else {
-                alloc_buffer(memory, 1);
+                char* buffer = alloc_buffer(memory, size + 1);
+                memcpy(buffer, &memory->file[i], size);
                 buffer[size] = '\0';
                 token->string = buffer;
                 token->tag = TOKEN_STR;
             }
+            i = j;
         }
         }
     }
