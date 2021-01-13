@@ -20,21 +20,22 @@ static void dealloc_buffer(Memory* memory, usize size) {
     memory->buffer_index -= size;
 }
 
-#define GET_DECIMAL(fn, type)                                   \
-    static type fn(const char* decimal) {                       \
-        type result = 0;                                        \
-        while (*decimal) {                                      \
-            char digit = *(decimal++);                          \
-            if (('0' <= digit) && (digit <= '9')) {             \
-                result = (result * 10) + ((type)(digit - '0')); \
-            } else {                                            \
-                ERROR();                                        \
-            }                                                   \
-        }                                                       \
-        return result;                                          \
+#define IS_ALPHA(x) \
+    ((('A' <= (x)) && ((x) <= 'Z')) || (('a' <= (x)) && ((x) <= 'z')))
+
+#define IS_DIGIT(x) (('0' <= (x)) && ((x) <= '9'))
+
+#define PARSE_DIGITS(fn, type)                               \
+    static type fn(Memory* memory, usize* i) {               \
+        type x = 0;                                          \
+        while (IS_DIGIT(memory->file[*i])) {                 \
+            x = (x * 10) + ((type)(memory->file[*i] - '0')); \
+            ++(*i);                                          \
+        }                                                    \
+        return x;                                            \
     }
 
-GET_DECIMAL(get_decimal_i32, i32)
+PARSE_DIGITS(parse_digits_i32, i32)
 
 static void set_tokens(Memory* memory) {
     u16 line = 1;
@@ -97,22 +98,9 @@ static void set_tokens(Memory* memory) {
             EXIT_IF(memory->file_index <= ++i);
             Token* token = alloc_token(memory);
             token->line = line;
-            if (('0' <= memory->file[i]) && (memory->file[i] <= '9')) {
-                usize j = i + 1;
-                for (; j < memory->file_index; ++j) {
-                    char x = memory->file[j];
-                    if (!(('0' <= x) && (x <= '9'))) {
-                        break;
-                    }
-                }
-                usize size = (j - i) + 1;
-                char* buffer = alloc_buffer(memory, size);
-                memcpy(buffer, &memory->file[i], size - 1);
-                i = j;
-                buffer[size - 1] = '\0';
+            if (IS_DIGIT(memory->file[i])) {
+                token->i32 = -parse_digits_i32(memory, &i);
                 token->tag = TOKEN_I32;
-                token->i32 = -get_decimal_i32(buffer);
-                dealloc_buffer(memory, size);
             } else {
                 token->tag = TOKEN_MINUS;
             }
@@ -121,27 +109,23 @@ static void set_tokens(Memory* memory) {
         default: {
             Token* token = alloc_token(memory);
             token->line = line;
-            usize j = i + 1;
+            if (IS_DIGIT(memory->file[i])) {
+                token->i32 = parse_digits_i32(memory, &i);
+                token->tag = TOKEN_I32;
+                continue;
+            }
+            usize j = i;
             for (; j < memory->file_index; ++j) {
-                char x = memory->file[j];
-                if (!((('a' <= x) && (x <= 'z')) ||
-                      (('A' <= x) && (x <= 'Z')) ||
-                      (('0' <= x) && (x <= '9'))))
-                {
+                if (!IS_ALPHA(memory->file[j])) {
                     break;
                 }
             }
-            usize size = (j - i) + 1;
+            EXIT_IF(i == j);
+            usize size = j - i;
             char* buffer = alloc_buffer(memory, size);
-            memcpy(buffer, &memory->file[i], size - 1);
+            memcpy(buffer, &memory->file[i], size);
             i = j;
-            buffer[size - 1] = '\0';
-            if (('0' <= buffer[0]) && (buffer[0] <= '9')) {
-                token->tag = TOKEN_I32;
-                token->i32 = get_decimal_i32(buffer);
-                dealloc_buffer(memory, size);
-
-            } else if (!memcmp(buffer, "rax", size)) {
+            if (!memcmp(buffer, "rax", size)) {
                 token->tag = TOKEN_RAX;
                 dealloc_buffer(memory, size);
             } else if (!memcmp(buffer, "rbx", size)) {
@@ -188,8 +172,10 @@ static void set_tokens(Memory* memory) {
                 dealloc_buffer(memory, size);
 
             } else {
-                token->tag = TOKEN_STR;
+                alloc_buffer(memory, 1);
+                buffer[size] = '\0';
                 token->string = buffer;
+                token->tag = TOKEN_STR;
             }
         }
         }
