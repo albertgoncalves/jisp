@@ -22,8 +22,8 @@ main:
     mov     rbp, rsp
 
     sub     rsp, 8
-    mov     [rsp + 4], 45 ; => `[rbp - 4]`
-    mov     [rsp], 99     ; => `[rbp - 8]`
+    mov     [rsp + 4], 1.1 ; => `[rbp - 4]`
+    mov     [rsp], -1.1    ; => `[rbp - 8]`
     call    f
 
     mov     rsp, rbp

@@ -953,6 +953,149 @@ static void test_compile_3(Memory* memory) {
     PRINT_FN_OK();
 }
 
+static void test_compile_4(Memory* memory) {
+    reset(memory);
+    {
+        const char* source = "    sub     rsp, 8\n"
+                             "    mov     [rsp], 1.1\n"
+                             "    mov     eax, [rsp]\n"
+                             "    add     rsp, 8\n"
+                             "    ret\n";
+        usize size = strlen(source);
+        memcpy(memory->file, source, size);
+        memory->file_index = size;
+    }
+    {
+        set_tokens(memory);
+        Token* tokens = memory->tokens;
+
+        EXIT_IF(tokens[0].tag != TOKEN_SUB);
+        EXIT_IF(tokens[0].line != 1);
+
+        EXIT_IF(tokens[1].tag != TOKEN_RSP);
+        EXIT_IF(tokens[1].line != 1);
+
+        EXIT_IF(tokens[2].tag != TOKEN_COMMA);
+        EXIT_IF(tokens[2].line != 1);
+
+        EXIT_IF(tokens[3].tag != TOKEN_I32);
+        EXIT_IF(tokens[3].i32 != 8);
+        EXIT_IF(tokens[3].line != 1);
+
+        EXIT_IF(tokens[4].tag != TOKEN_MOV);
+        EXIT_IF(tokens[4].line != 2);
+
+        EXIT_IF(tokens[5].tag != TOKEN_LBRACKET);
+        EXIT_IF(tokens[5].line != 2);
+
+        EXIT_IF(tokens[6].tag != TOKEN_RSP);
+        EXIT_IF(tokens[6].line != 2);
+
+        EXIT_IF(tokens[7].tag != TOKEN_RBRACKET);
+        EXIT_IF(tokens[7].line != 2);
+
+        EXIT_IF(tokens[8].tag != TOKEN_COMMA);
+        EXIT_IF(tokens[8].line != 2);
+
+        EXIT_IF(tokens[9].tag != TOKEN_F32);
+        EXIT_IF(tokens[9].i32 != 1066192077);
+        EXIT_IF(tokens[9].line != 2);
+
+        EXIT_IF(tokens[10].tag != TOKEN_MOV);
+        EXIT_IF(tokens[10].line != 3);
+
+        EXIT_IF(tokens[11].tag != TOKEN_EAX);
+        EXIT_IF(tokens[11].line != 3);
+
+        EXIT_IF(tokens[12].tag != TOKEN_COMMA);
+        EXIT_IF(tokens[12].line != 3);
+
+        EXIT_IF(tokens[13].tag != TOKEN_LBRACKET);
+        EXIT_IF(tokens[13].line != 3);
+
+        EXIT_IF(tokens[14].tag != TOKEN_RSP);
+        EXIT_IF(tokens[14].line != 3);
+
+        EXIT_IF(tokens[15].tag != TOKEN_RBRACKET);
+        EXIT_IF(tokens[15].line != 3);
+
+        EXIT_IF(tokens[16].tag != TOKEN_ADD);
+        EXIT_IF(tokens[16].line != 4);
+
+        EXIT_IF(tokens[17].tag != TOKEN_RSP);
+        EXIT_IF(tokens[17].line != 4);
+
+        EXIT_IF(tokens[18].tag != TOKEN_COMMA);
+        EXIT_IF(tokens[18].line != 4);
+
+        EXIT_IF(tokens[19].tag != TOKEN_I32);
+        EXIT_IF(tokens[19].i32 != 8);
+        EXIT_IF(tokens[19].line != 4);
+
+        EXIT_IF(tokens[20].tag != TOKEN_RET);
+        EXIT_IF(tokens[20].line != 5);
+
+        EXIT_IF(memory->tokens_index != 21);
+        EXIT_IF(memory->buffer_index != 0);
+    }
+    {
+        // NOTE: Not finished!
+        set_insts(memory);
+        EXIT_IF(memory->labels_index != 0);
+        resolve_insts(memory);
+        Inst* insts = memory->insts;
+
+        EXIT_IF(insts[0].tag != INST_SUB_REG_IMM_I32);
+        EXIT_IF(insts[0].dst.reg != REG_RSP);
+        EXIT_IF(insts[0].dst.line != 1);
+        EXIT_IF(insts[0].src.imm_i32 != 8);
+        EXIT_IF(insts[0].src.line != 1);
+        EXIT_IF(insts[0].position != 0);
+        EXIT_IF(insts[0].size != 7);
+
+        EXIT_IF(insts[1].tag != INST_MOV_ADDR_OFFSET_IMM_I32);
+        EXIT_IF(insts[1].dst.reg != REG_RSP);
+        EXIT_IF(insts[1].dst.addr_offset != 0);
+        EXIT_IF(insts[1].dst.line != 2);
+        EXIT_IF(insts[1].src.imm_i32 != 1066192077)
+        EXIT_IF(insts[1].src.line != 2);
+        EXIT_IF(insts[1].position != 7);
+        EXIT_IF(insts[1].size != 11);
+
+        EXIT_IF(insts[2].tag != INST_MOV_REG_ADDR_OFFSET);
+        EXIT_IF(insts[2].dst.reg != REG_EAX);
+        EXIT_IF(insts[2].dst.line != 3);
+        EXIT_IF(insts[2].src.reg != REG_RSP);
+        EXIT_IF(insts[2].src.addr_offset != 0);
+        EXIT_IF(insts[2].src.line != 3);
+        EXIT_IF(insts[2].position != 18);
+        EXIT_IF(insts[2].size != 7);
+
+        EXIT_IF(insts[3].tag != INST_ADD_REG_IMM_I32);
+        EXIT_IF(insts[3].dst.reg != REG_RSP);
+        EXIT_IF(insts[3].dst.line != 4);
+        EXIT_IF(insts[3].src.imm_i32 != 8);
+        EXIT_IF(insts[3].src.line != 4);
+        EXIT_IF(insts[3].position != 25);
+        EXIT_IF(insts[3].size != 7);
+
+        EXIT_IF(insts[4].tag != INST_RET);
+        EXIT_IF(insts[4].position != 32);
+        EXIT_IF(insts[4].size != 1);
+
+        EXIT_IF(memory->insts_index != 5);
+    }
+    {
+        set_bytes(memory);
+        EXIT_IF(memory->bytes_index != 33);
+        Program program = transform(memory);
+        EXIT_IF(1066192077 != (*((FnVoidI32*)&program.buffer))());
+        EXIT_IF(munmap(program.buffer, memory->bytes_index));
+    }
+    reset(memory);
+    PRINT_FN_OK();
+}
+
 static void test_emit_transform(Memory* memory) {
     reset(memory);
     i32 x = 42;
@@ -1027,6 +1170,7 @@ i32 main(i32 n, const char** args) {
         test_compile_1(memory);
         test_compile_2(memory);
         test_compile_3(memory);
+        test_compile_4(memory);
         test_emit_transform(memory);
     }
     EXIT_IF(n < 2);
