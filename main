@@ -5,9 +5,8 @@ set -euo pipefail
 flags=(
     "-fshort-enums"
     "-fsingle-precision-constant"
-    "-g"
     "-march=native"
-    "-O1"
+    "-O0"
     "-static"
     "-Wall"
     "-Wcast-align"
