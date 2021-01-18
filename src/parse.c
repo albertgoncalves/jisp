@@ -48,8 +48,11 @@ static Arg get_arg(Memory* memory, usize* i) {
     case TOKEN_PLUS:
     case TOKEN_MINUS:
     case TOKEN_MOV:
+    case TOKEN_MOVSS:
     case TOKEN_ADD:
+    case TOKEN_ADDSS:
     case TOKEN_SUB:
+    case TOKEN_XORPS:
     case TOKEN_PUSH:
     case TOKEN_POP:
     case TOKEN_CALL:
@@ -108,6 +111,20 @@ static Arg get_arg(Memory* memory, usize* i) {
     case TOKEN_RSP: {
         return (Arg){
             .reg = REG_RSP,
+            .tag = ARG_REG,
+            .line = token.line,
+        };
+    }
+    case TOKEN_XMM0: {
+        return (Arg){
+            .reg = REG_XMM0,
+            .tag = ARG_REG,
+            .line = token.line,
+        };
+    }
+    case TOKEN_XMM1: {
+        return (Arg){
+            .reg = REG_XMM1,
             .tag = ARG_REG,
             .line = token.line,
         };
@@ -181,6 +198,8 @@ static void set_insts(Memory* memory) {
         case TOKEN_EDI:
         case TOKEN_RBP:
         case TOKEN_RSP:
+        case TOKEN_XMM0:
+        case TOKEN_XMM1:
         case TOKEN_I32:
         case TOKEN_F32:
         case TOKEN_COMMA:
@@ -231,12 +250,11 @@ static void set_insts(Memory* memory) {
                     inst->tag = INST_MOV_REG_ADDR_OFFSET;
                     if (src.reg == REG_RBP) {
                         set_size_position(inst, &position, 6);
+                        continue;
                     } else if (src.reg == REG_RSP) {
                         set_size_position(inst, &position, 7);
-                    } else {
-                        UNEXPECTED_ARG(src);
+                        continue;
                     }
-                    continue;
                 }
                 UNEXPECTED_ARG(src);
             } else if (dst.tag == ARG_ADDR_OFFSET) {
@@ -260,6 +278,25 @@ static void set_insts(Memory* memory) {
                         UNEXPECTED_ARG(dst);
                     }
                     continue;
+                }
+                UNEXPECTED_ARG(src);
+            }
+            UNEXPECTED_ARG(dst);
+        }
+        case TOKEN_MOVSS: {
+            Arg dst = get_arg(memory, &i);
+            EXPECTED_TOKEN(TOKEN_COMMA, memory, &i);
+            Arg src = get_arg(memory, &i);
+            if (dst.tag == ARG_REG) {
+                if (src.tag == ARG_ADDR_OFFSET) {
+                    if (src.reg == REG_RSP) {
+                        Inst* inst = alloc_inst(memory);
+                        inst->dst = dst;
+                        inst->src = src;
+                        inst->tag = INST_MOVSS_REG_ADDR_OFFSET;
+                        set_size_position(inst, &position, 9);
+                        continue;
+                    }
                 }
                 UNEXPECTED_ARG(src);
             }
@@ -290,6 +327,27 @@ static void set_insts(Memory* memory) {
             }
             UNEXPECTED_ARG(dst);
         }
+        case TOKEN_ADDSS: {
+            Arg dst = get_arg(memory, &i);
+            EXPECTED_TOKEN(TOKEN_COMMA, memory, &i);
+            Arg src = get_arg(memory, &i);
+            if (dst.tag == ARG_REG) {
+                Inst* inst = alloc_inst(memory);
+                inst->dst = dst;
+                inst->src = src;
+                if (src.tag == ARG_REG) {
+                    inst->tag = INST_ADDSS_REG_REG;
+                    set_size_position(inst, &position, 4);
+                    continue;
+                } else if (src.tag == ARG_ADDR_OFFSET) {
+                    inst->tag = INST_ADDSS_REG_ADDR_OFFSET;
+                    set_size_position(inst, &position, 9);
+                    continue;
+                }
+                UNEXPECTED_ARG(src);
+            }
+            UNEXPECTED_ARG(dst);
+        }
         case TOKEN_SUB: {
             Arg dst = get_arg(memory, &i);
             EXPECTED_TOKEN(TOKEN_COMMA, memory, &i);
@@ -309,6 +367,23 @@ static void set_insts(Memory* memory) {
                 } else if (src.tag == ARG_REG) {
                     inst->tag = INST_SUB_REG_REG;
                     set_size_position(inst, &position, 2);
+                    continue;
+                }
+                UNEXPECTED_ARG(src);
+            }
+            UNEXPECTED_ARG(dst);
+        }
+        case TOKEN_XORPS: {
+            Arg dst = get_arg(memory, &i);
+            EXPECTED_TOKEN(TOKEN_COMMA, memory, &i);
+            Arg src = get_arg(memory, &i);
+            if (dst.tag == ARG_REG) {
+                if (src.tag == ARG_REG) {
+                    Inst* inst = alloc_inst(memory);
+                    inst->dst = dst;
+                    inst->src = src;
+                    inst->tag = INST_XORPS_REG_REG;
+                    set_size_position(inst, &position, 3);
                     continue;
                 }
                 UNEXPECTED_ARG(src);

@@ -12,6 +12,9 @@ typedef enum {
     TOKEN_RBP,
     TOKEN_RSP,
 
+    TOKEN_XMM0,
+    TOKEN_XMM1,
+
     TOKEN_I32,
     TOKEN_F32,
     TOKEN_STR,
@@ -25,8 +28,11 @@ typedef enum {
     TOKEN_MINUS,
 
     TOKEN_MOV,
+    TOKEN_MOVSS,
     TOKEN_ADD,
+    TOKEN_ADDSS,
     TOKEN_SUB,
+    TOKEN_XORPS,
     TOKEN_PUSH,
     TOKEN_POP,
     TOKEN_CALL,
@@ -75,16 +81,36 @@ static void print_token(File* stream, Token token) {
         fprintf(stream, FMT_LINE "rsp", token.line);
         break;
     }
+    case TOKEN_XMM0: {
+        fprintf(stream, FMT_LINE "xmm0", token.line);
+        break;
+    }
+    case TOKEN_XMM1: {
+        fprintf(stream, FMT_LINE "xmm1", token.line);
+        break;
+    }
     case TOKEN_MOV: {
         fprintf(stream, FMT_LINE "mov", token.line);
+        break;
+    }
+    case TOKEN_MOVSS: {
+        fprintf(stream, FMT_LINE "movss", token.line);
         break;
     }
     case TOKEN_ADD: {
         fprintf(stream, FMT_LINE "add", token.line);
         break;
     }
+    case TOKEN_ADDSS: {
+        fprintf(stream, FMT_LINE "addss", token.line);
+        break;
+    }
     case TOKEN_SUB: {
         fprintf(stream, FMT_LINE "sub", token.line);
+        break;
+    }
+    case TOKEN_XORPS: {
+        fprintf(stream, FMT_LINE "xorps", token.line);
         break;
     }
     case TOKEN_PUSH: {

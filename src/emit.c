@@ -28,6 +28,25 @@
         memory->bytes[memory->bytes_index++] = c;        \
     }
 
+#define EMIT_4_BYTES(fn, a, b, c, d)                     \
+    static void fn(Memory* memory) {                     \
+        EXIT_IF(SIZE_BYTES < (memory->bytes_index + 4)); \
+        memory->bytes[memory->bytes_index++] = a;        \
+        memory->bytes[memory->bytes_index++] = b;        \
+        memory->bytes[memory->bytes_index++] = c;        \
+        memory->bytes[memory->bytes_index++] = d;        \
+    }
+
+#define EMIT_5_BYTES(fn, a, b, c, d, e)                  \
+    static void fn(Memory* memory) {                     \
+        EXIT_IF(SIZE_BYTES < (memory->bytes_index + 5)); \
+        memory->bytes[memory->bytes_index++] = a;        \
+        memory->bytes[memory->bytes_index++] = b;        \
+        memory->bytes[memory->bytes_index++] = c;        \
+        memory->bytes[memory->bytes_index++] = d;        \
+        memory->bytes[memory->bytes_index++] = e;        \
+    }
+
 #define EMIT_1_VAR(fn, type)                                               \
     static void fn(Memory* memory, type value) {                           \
         EXIT_IF(SIZE_BYTES < (memory->bytes_index + sizeof(type)));        \
@@ -55,13 +74,21 @@ EMIT_2_BYTES(emit_mov_addr_rbp_offset_eax, 0x89, 0x85)
 EMIT_3_BYTES(emit_mov_addr_rsp_offset_eax, 0x89, 0x84, 0x24)
 EMIT_3_BYTES(emit_mov_addr_rsp_offset_edi, 0x89, 0xBC, 0x24)
 
+EMIT_5_BYTES(emit_movss_xmm0_addr_rsp_offset, 0xF3, 0x0F, 0x10, 0x84, 0x24)
+EMIT_5_BYTES(emit_movss_xmm1_addr_rsp_offset, 0xF3, 0x0F, 0x10, 0x8C, 0x24)
+
 EMIT_2_BYTES(emit_add_eax_ebx, 0x01, 0xD8)
 EMIT_1_BYTE(emit_add_eax_imm_i32, 0x05)
 EMIT_3_BYTES(emit_add_rsp_imm_i32, 0x48, 0x81, 0xC4)
 
+EMIT_4_BYTES(emit_addss_xmm0_xmm1, 0xF3, 0x0F, 0x58, 0xC1)
+EMIT_5_BYTES(emit_addss_xmm0_addr_rsp_offset, 0xF3, 0x0F, 0x58, 0x84, 0x24)
+
 EMIT_2_BYTES(emit_sub_eax_ebx, 0x29, 0xD8)
 EMIT_1_BYTE(emit_sub_eax_imm_i32, 0x2D)
 EMIT_3_BYTES(emit_sub_rsp_imm_i32, 0x48, 0x81, 0xEC)
+
+EMIT_3_BYTES(emit_xorps_xmm0_xmm0, 0x0F, 0x57, 0xC0)
 
 EMIT_1_BYTE(emit_push_rbx, 0x53)
 EMIT_1_BYTE(emit_push_rbp, 0x55)
@@ -187,6 +214,22 @@ static void set_bytes(Memory* memory) {
             CHECK_SIZE(memory, position, inst.size);
             break;
         }
+        case INST_MOVSS_REG_ADDR_OFFSET: {
+            if (inst.src.reg == REG_RSP) {
+                if (inst.dst.reg == REG_XMM0) {
+                    emit_movss_xmm0_addr_rsp_offset(memory);
+                } else if (inst.dst.reg == REG_XMM1) {
+                    emit_movss_xmm1_addr_rsp_offset(memory);
+                } else {
+                    UNEXPECTED_ARG(inst.dst);
+                }
+            } else {
+                UNEXPECTED_ARG(inst.src);
+            }
+            emit_i32(memory, inst.src.addr_offset);
+            CHECK_SIZE(memory, position, inst.size);
+            break;
+        }
         case INST_ADD_REG_REG: {
             if (inst.dst.reg == REG_EAX) {
                 if (inst.src.reg == REG_EBX) {
@@ -212,6 +255,33 @@ static void set_bytes(Memory* memory) {
             CHECK_SIZE(memory, position, inst.size);
             break;
         }
+        case INST_ADDSS_REG_REG: {
+            if (inst.dst.reg == REG_XMM0) {
+                if (inst.src.reg == REG_XMM1) {
+                    emit_addss_xmm0_xmm1(memory);
+                } else {
+                    UNEXPECTED_ARG(inst.src);
+                }
+            } else {
+                UNEXPECTED_ARG(inst.dst);
+            }
+            CHECK_SIZE(memory, position, inst.size);
+            break;
+        }
+        case INST_ADDSS_REG_ADDR_OFFSET: {
+            if (inst.src.reg == REG_RSP) {
+                if (inst.dst.reg == REG_XMM0) {
+                    emit_addss_xmm0_addr_rsp_offset(memory);
+                } else {
+                    UNEXPECTED_ARG(inst.dst);
+                }
+            } else {
+                UNEXPECTED_ARG(inst.src);
+            }
+            emit_i32(memory, inst.src.addr_offset);
+            CHECK_SIZE(memory, position, inst.size);
+            break;
+        }
         case INST_SUB_REG_REG: {
             if (inst.dst.reg == REG_EAX) {
                 if (inst.src.reg == REG_EBX) {
@@ -234,6 +304,19 @@ static void set_bytes(Memory* memory) {
                 UNEXPECTED_ARG(inst.dst);
             }
             emit_i32(memory, inst.src.imm_i32);
+            CHECK_SIZE(memory, position, inst.size);
+            break;
+        }
+        case INST_XORPS_REG_REG: {
+            if (inst.dst.reg == REG_XMM0) {
+                if (inst.src.reg == REG_XMM0) {
+                    emit_xorps_xmm0_xmm0(memory);
+                } else {
+                    UNEXPECTED_ARG(inst.src);
+                }
+            } else {
+                UNEXPECTED_ARG(inst.dst);
+            }
             CHECK_SIZE(memory, position, inst.size);
             break;
         }

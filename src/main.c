@@ -1039,7 +1039,6 @@ static void test_compile_4(Memory* memory) {
         EXIT_IF(memory->buffer_index != 0);
     }
     {
-        // NOTE: Not finished!
         set_insts(memory);
         EXIT_IF(memory->labels_index != 0);
         resolve_insts(memory);
@@ -1090,6 +1089,325 @@ static void test_compile_4(Memory* memory) {
         EXIT_IF(memory->bytes_index != 33);
         Program program = transform(memory);
         EXIT_IF(1066192077 != (*((FnVoidI32*)&program.buffer))());
+        EXIT_IF(munmap(program.buffer, memory->bytes_index));
+    }
+    reset(memory);
+    PRINT_FN_OK();
+}
+
+static void test_compile_5(Memory* memory) {
+    reset(memory);
+    {
+        const char* source = "    sub     rsp, 8\n"
+                             "    mov     [rsp + 4], 1.0 ; => `[rbp - 4]`\n"
+                             "    mov     [rsp], -1.5    ; => `[rbp - 8]`\n"
+                             "    xorps   xmm0, xmm0\n"
+                             "    movss   xmm0, [rsp + 4]\n"
+                             "    movss   xmm1, [rsp]\n"
+                             "    addss   xmm0, xmm1\n"
+                             "    addss   xmm0, [rsp]\n"
+                             "    addss   xmm0, [rsp + 4]\n"
+                             "    add     rsp, 8\n"
+                             "    ret\n";
+        usize size = strlen(source);
+        memcpy(memory->file, source, size);
+        memory->file_index = size;
+    }
+    {
+        set_tokens(memory);
+        Token* tokens = memory->tokens;
+
+        EXIT_IF(tokens[0].tag != TOKEN_SUB);
+        EXIT_IF(tokens[0].line != 1);
+
+        EXIT_IF(tokens[1].tag != TOKEN_RSP);
+        EXIT_IF(tokens[1].line != 1);
+
+        EXIT_IF(tokens[2].tag != TOKEN_COMMA);
+        EXIT_IF(tokens[2].line != 1);
+
+        EXIT_IF(tokens[3].tag != TOKEN_I32);
+        EXIT_IF(tokens[3].i32 != 8);
+        EXIT_IF(tokens[3].line != 1);
+
+        EXIT_IF(tokens[4].tag != TOKEN_MOV);
+        EXIT_IF(tokens[4].line != 2);
+
+        EXIT_IF(tokens[5].tag != TOKEN_LBRACKET);
+        EXIT_IF(tokens[5].line != 2);
+
+        EXIT_IF(tokens[6].tag != TOKEN_RSP);
+        EXIT_IF(tokens[6].line != 2);
+
+        EXIT_IF(tokens[7].tag != TOKEN_PLUS);
+        EXIT_IF(tokens[7].line != 2);
+
+        EXIT_IF(tokens[8].tag != TOKEN_I32);
+        EXIT_IF(tokens[8].i32 != 4);
+        EXIT_IF(tokens[8].line != 2);
+
+        EXIT_IF(tokens[9].tag != TOKEN_RBRACKET);
+        EXIT_IF(tokens[9].line != 2);
+
+        EXIT_IF(tokens[10].tag != TOKEN_COMMA);
+        EXIT_IF(tokens[10].line != 2);
+
+        EXIT_IF(tokens[11].tag != TOKEN_F32);
+        EXIT_IF(tokens[11].i32 != 1065353216);
+        EXIT_IF(tokens[11].line != 2);
+
+        EXIT_IF(tokens[12].tag != TOKEN_MOV);
+        EXIT_IF(tokens[12].line != 3);
+
+        EXIT_IF(tokens[13].tag != TOKEN_LBRACKET);
+        EXIT_IF(tokens[13].line != 3);
+
+        EXIT_IF(tokens[14].tag != TOKEN_RSP);
+        EXIT_IF(tokens[14].line != 3);
+
+        EXIT_IF(tokens[15].tag != TOKEN_RBRACKET);
+        EXIT_IF(tokens[15].line != 3);
+
+        EXIT_IF(tokens[16].tag != TOKEN_COMMA);
+        EXIT_IF(tokens[16].line != 3);
+
+        EXIT_IF(tokens[17].tag != TOKEN_F32);
+        EXIT_IF(tokens[17].i32 != -1077936128);
+        EXIT_IF(tokens[17].line != 3);
+
+        EXIT_IF(tokens[18].tag != TOKEN_XORPS);
+        EXIT_IF(tokens[18].line != 4);
+
+        EXIT_IF(tokens[19].tag != TOKEN_XMM0);
+        EXIT_IF(tokens[19].line != 4);
+
+        EXIT_IF(tokens[20].tag != TOKEN_COMMA);
+        EXIT_IF(tokens[20].line != 4);
+
+        EXIT_IF(tokens[21].tag != TOKEN_XMM0);
+        EXIT_IF(tokens[21].line != 4);
+
+        EXIT_IF(tokens[22].tag != TOKEN_MOVSS);
+        EXIT_IF(tokens[22].line != 5);
+
+        EXIT_IF(tokens[23].tag != TOKEN_XMM0);
+        EXIT_IF(tokens[23].line != 5);
+
+        EXIT_IF(tokens[24].tag != TOKEN_COMMA);
+        EXIT_IF(tokens[24].line != 5);
+
+        EXIT_IF(tokens[25].tag != TOKEN_LBRACKET);
+        EXIT_IF(tokens[25].line != 5);
+
+        EXIT_IF(tokens[26].tag != TOKEN_RSP);
+        EXIT_IF(tokens[26].line != 5);
+
+        EXIT_IF(tokens[27].tag != TOKEN_PLUS);
+        EXIT_IF(tokens[27].line != 5);
+
+        EXIT_IF(tokens[28].tag != TOKEN_I32);
+        EXIT_IF(tokens[28].i32 != 4);
+        EXIT_IF(tokens[28].line != 5);
+
+        EXIT_IF(tokens[29].tag != TOKEN_RBRACKET);
+        EXIT_IF(tokens[29].line != 5);
+
+        EXIT_IF(tokens[30].tag != TOKEN_MOVSS);
+        EXIT_IF(tokens[30].line != 6);
+
+        EXIT_IF(tokens[31].tag != TOKEN_XMM1);
+        EXIT_IF(tokens[31].line != 6);
+
+        EXIT_IF(tokens[32].tag != TOKEN_COMMA);
+        EXIT_IF(tokens[32].line != 6);
+
+        EXIT_IF(tokens[33].tag != TOKEN_LBRACKET);
+        EXIT_IF(tokens[33].line != 6);
+
+        EXIT_IF(tokens[34].tag != TOKEN_RSP);
+        EXIT_IF(tokens[34].line != 6);
+
+        EXIT_IF(tokens[35].tag != TOKEN_RBRACKET);
+        EXIT_IF(tokens[35].line != 6);
+
+        EXIT_IF(tokens[36].tag != TOKEN_ADDSS);
+        EXIT_IF(tokens[36].line != 7);
+
+        EXIT_IF(tokens[37].tag != TOKEN_XMM0);
+        EXIT_IF(tokens[37].line != 7);
+
+        EXIT_IF(tokens[38].tag != TOKEN_COMMA);
+        EXIT_IF(tokens[38].line != 7);
+
+        EXIT_IF(tokens[39].tag != TOKEN_XMM1);
+        EXIT_IF(tokens[39].line != 7);
+
+        EXIT_IF(tokens[40].tag != TOKEN_ADDSS);
+        EXIT_IF(tokens[40].line != 8);
+
+        EXIT_IF(tokens[41].tag != TOKEN_XMM0);
+        EXIT_IF(tokens[41].line != 8);
+
+        EXIT_IF(tokens[42].tag != TOKEN_COMMA);
+        EXIT_IF(tokens[42].line != 8);
+
+        EXIT_IF(tokens[43].tag != TOKEN_LBRACKET);
+        EXIT_IF(tokens[43].line != 8);
+
+        EXIT_IF(tokens[44].tag != TOKEN_RSP);
+        EXIT_IF(tokens[44].line != 8);
+
+        EXIT_IF(tokens[45].tag != TOKEN_RBRACKET);
+        EXIT_IF(tokens[45].line != 8);
+
+        EXIT_IF(tokens[46].tag != TOKEN_ADDSS);
+        EXIT_IF(tokens[46].line != 9);
+
+        EXIT_IF(tokens[47].tag != TOKEN_XMM0);
+        EXIT_IF(tokens[47].line != 9);
+
+        EXIT_IF(tokens[48].tag != TOKEN_COMMA);
+        EXIT_IF(tokens[48].line != 9);
+
+        EXIT_IF(tokens[49].tag != TOKEN_LBRACKET);
+        EXIT_IF(tokens[49].line != 9);
+
+        EXIT_IF(tokens[50].tag != TOKEN_RSP);
+        EXIT_IF(tokens[50].line != 9);
+
+        EXIT_IF(tokens[51].tag != TOKEN_PLUS);
+        EXIT_IF(tokens[51].line != 9);
+
+        EXIT_IF(tokens[52].tag != TOKEN_I32);
+        EXIT_IF(tokens[52].i32 != 4);
+        EXIT_IF(tokens[52].line != 9);
+
+        EXIT_IF(tokens[53].tag != TOKEN_RBRACKET);
+        EXIT_IF(tokens[53].line != 9);
+
+        EXIT_IF(tokens[54].tag != TOKEN_ADD);
+        EXIT_IF(tokens[54].line != 10);
+
+        EXIT_IF(tokens[55].tag != TOKEN_RSP);
+        EXIT_IF(tokens[55].line != 10);
+
+        EXIT_IF(tokens[56].tag != TOKEN_COMMA);
+        EXIT_IF(tokens[56].line != 10);
+
+        EXIT_IF(tokens[57].tag != TOKEN_I32);
+        EXIT_IF(tokens[57].i32 != 8);
+        EXIT_IF(tokens[57].line != 10);
+
+        EXIT_IF(tokens[58].tag != TOKEN_RET);
+        EXIT_IF(tokens[58].line != 11);
+
+        EXIT_IF(memory->tokens_index != 59);
+        EXIT_IF(memory->buffer_index != 0);
+    }
+    {
+        set_insts(memory);
+        EXIT_IF(memory->labels_index != 0);
+        resolve_insts(memory);
+        Inst* insts = memory->insts;
+
+        EXIT_IF(insts[0].tag != INST_SUB_REG_IMM_I32);
+        EXIT_IF(insts[0].dst.reg != REG_RSP);
+        EXIT_IF(insts[0].dst.line != 1);
+        EXIT_IF(insts[0].src.imm_i32 != 8);
+        EXIT_IF(insts[0].src.line != 1);
+        EXIT_IF(insts[0].position != 0);
+        EXIT_IF(insts[0].size != 7);
+
+        EXIT_IF(insts[1].tag != INST_MOV_ADDR_OFFSET_IMM_I32);
+        EXIT_IF(insts[1].dst.reg != REG_RSP);
+        EXIT_IF(insts[1].dst.addr_offset != 4);
+        EXIT_IF(insts[1].dst.line != 2);
+        EXIT_IF(insts[1].src.imm_i32 != 1065353216)
+        EXIT_IF(insts[1].src.line != 2);
+        EXIT_IF(insts[1].position != 7);
+        EXIT_IF(insts[1].size != 11);
+
+        EXIT_IF(insts[2].tag != INST_MOV_ADDR_OFFSET_IMM_I32);
+        EXIT_IF(insts[2].dst.reg != REG_RSP);
+        EXIT_IF(insts[2].dst.addr_offset != 0);
+        EXIT_IF(insts[2].dst.line != 3);
+        EXIT_IF(insts[2].src.imm_i32 != -1077936128)
+        EXIT_IF(insts[2].src.line != 3);
+        EXIT_IF(insts[2].position != 18);
+        EXIT_IF(insts[2].size != 11);
+
+        EXIT_IF(insts[3].tag != INST_XORPS_REG_REG);
+        EXIT_IF(insts[3].dst.reg != REG_XMM0);
+        EXIT_IF(insts[3].dst.line != 4);
+        EXIT_IF(insts[3].src.reg != REG_XMM0);
+        EXIT_IF(insts[3].src.line != 4);
+        EXIT_IF(insts[3].position != 29);
+        EXIT_IF(insts[3].size != 3);
+
+        EXIT_IF(insts[4].tag != INST_MOVSS_REG_ADDR_OFFSET);
+        EXIT_IF(insts[4].dst.reg != REG_XMM0);
+        EXIT_IF(insts[4].dst.line != 5);
+        EXIT_IF(insts[4].src.reg != REG_RSP);
+        EXIT_IF(insts[4].src.addr_offset != 4);
+        EXIT_IF(insts[4].src.line != 5);
+        EXIT_IF(insts[4].position != 32);
+        EXIT_IF(insts[4].size != 9);
+
+        EXIT_IF(insts[5].tag != INST_MOVSS_REG_ADDR_OFFSET);
+        EXIT_IF(insts[5].dst.reg != REG_XMM1);
+        EXIT_IF(insts[5].dst.line != 6);
+        EXIT_IF(insts[5].src.reg != REG_RSP);
+        EXIT_IF(insts[5].src.addr_offset != 0);
+        EXIT_IF(insts[5].src.line != 6);
+        EXIT_IF(insts[5].position != 41);
+        EXIT_IF(insts[5].size != 9);
+
+        EXIT_IF(insts[6].tag != INST_ADDSS_REG_REG);
+        EXIT_IF(insts[6].dst.reg != REG_XMM0);
+        EXIT_IF(insts[6].dst.line != 7);
+        EXIT_IF(insts[6].src.reg != REG_XMM1);
+        EXIT_IF(insts[6].src.line != 7);
+        EXIT_IF(insts[6].position != 50);
+        EXIT_IF(insts[6].size != 4);
+
+        EXIT_IF(insts[7].tag != INST_ADDSS_REG_ADDR_OFFSET);
+        EXIT_IF(insts[7].dst.reg != REG_XMM0);
+        EXIT_IF(insts[7].dst.line != 8);
+        EXIT_IF(insts[7].src.reg != REG_RSP);
+        EXIT_IF(insts[7].src.addr_offset != 0);
+        EXIT_IF(insts[7].src.line != 8);
+        EXIT_IF(insts[7].position != 54);
+        EXIT_IF(insts[7].size != 9);
+
+        EXIT_IF(insts[8].tag != INST_ADDSS_REG_ADDR_OFFSET);
+        EXIT_IF(insts[8].dst.reg != REG_XMM0);
+        EXIT_IF(insts[8].dst.line != 9);
+        EXIT_IF(insts[8].src.reg != REG_RSP);
+        EXIT_IF(insts[8].src.addr_offset != 4);
+        EXIT_IF(insts[8].src.line != 9);
+        EXIT_IF(insts[8].position != 63);
+        EXIT_IF(insts[8].size != 9);
+
+        EXIT_IF(insts[9].tag != INST_ADD_REG_IMM_I32);
+        EXIT_IF(insts[9].dst.reg != REG_RSP);
+        EXIT_IF(insts[9].dst.line != 10);
+        EXIT_IF(insts[9].src.imm_i32 != 8);
+        EXIT_IF(insts[9].src.line != 10);
+        EXIT_IF(insts[9].position != 72);
+        EXIT_IF(insts[9].size != 7);
+
+        EXIT_IF(insts[10].tag != INST_RET);
+        EXIT_IF(insts[10].position != 79);
+        EXIT_IF(insts[10].size != 1);
+
+        EXIT_IF(memory->insts_index != 11);
+    }
+    {
+        set_bytes(memory);
+        EXIT_IF(memory->bytes_index != 80);
+        Program program = transform(memory);
+        f32 x = (*((FnVoidF32*)&program.buffer))();
+        EXIT_IF(-1082130432 != *((i32*)(&x)));
         EXIT_IF(munmap(program.buffer, memory->bytes_index));
     }
     reset(memory);
@@ -1171,6 +1489,7 @@ i32 main(i32 n, const char** args) {
         test_compile_2(memory);
         test_compile_3(memory);
         test_compile_4(memory);
+        test_compile_5(memory);
         test_emit_transform(memory);
     }
     EXIT_IF(n < 2);
@@ -1183,7 +1502,7 @@ i32 main(i32 n, const char** args) {
         set_bytes(memory);
         {
             Program program = transform(memory);
-            printf("%d\n", (*((FnVoidI32*)&program.buffer))());
+            printf("%f\n", (f64)(*((FnVoidF32*)&program.buffer))());
             EXIT_IF(munmap(program.buffer, memory->bytes_index));
         }
     }

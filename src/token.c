@@ -20,6 +20,8 @@ static char* alloc_buffer(Memory* memory, usize size) {
 
 #define IS_DIGIT(x) (('0' <= (x)) && ((x) <= '9'))
 
+#define IS_ALPHA_OR_DIGIT(x) (IS_ALPHA(x) || IS_DIGIT(x))
+
 static i32 parse_digits_i32(Memory* memory, usize* i) {
     i32 x = 0;
     while (IS_DIGIT(memory->file[*i])) {
@@ -131,7 +133,7 @@ static void set_tokens(Memory* memory) {
             }
             usize j = i;
             for (; j < memory->file_index; ++j) {
-                if (!IS_ALPHA(memory->file[j])) {
+                if (!(IS_ALPHA_OR_DIGIT(memory->file[j]))) {
                     break;
                 }
             }
@@ -154,12 +156,23 @@ static void set_tokens(Memory* memory) {
             } else if (!memcmp(&memory->file[i], "rsp", size)) {
                 token->tag = TOKEN_RSP;
 
+            } else if (!memcmp(&memory->file[i], "xmm0", size)) {
+                token->tag = TOKEN_XMM0;
+            } else if (!memcmp(&memory->file[i], "xmm1", size)) {
+                token->tag = TOKEN_XMM1;
+
             } else if (!memcmp(&memory->file[i], "mov", size)) {
                 token->tag = TOKEN_MOV;
+            } else if (!memcmp(&memory->file[i], "movss", size)) {
+                token->tag = TOKEN_MOVSS;
             } else if (!memcmp(&memory->file[i], "add", size)) {
                 token->tag = TOKEN_ADD;
+            } else if (!memcmp(&memory->file[i], "addss", size)) {
+                token->tag = TOKEN_ADDSS;
             } else if (!memcmp(&memory->file[i], "sub", size)) {
                 token->tag = TOKEN_SUB;
+            } else if (!memcmp(&memory->file[i], "xorps", size)) {
+                token->tag = TOKEN_XORPS;
             } else if (!memcmp(&memory->file[i], "push", size)) {
                 token->tag = TOKEN_PUSH;
             } else if (!memcmp(&memory->file[i], "pop", size)) {

@@ -13,11 +13,18 @@ typedef enum {
     INST_MOV_ADDR_OFFSET_REG,
     INST_MOV_ADDR_OFFSET_IMM_I32,
 
+    INST_MOVSS_REG_ADDR_OFFSET,
+
     INST_ADD_REG_REG,
     INST_ADD_REG_IMM_I32,
 
+    INST_ADDSS_REG_REG,
+    INST_ADDSS_REG_ADDR_OFFSET,
+
     INST_SUB_REG_REG,
     INST_SUB_REG_IMM_I32,
+
+    INST_XORPS_REG_REG,
 
     INST_PUSH_REG,
     INST_PUSH_IMM_I32,
@@ -39,6 +46,9 @@ typedef enum {
 
     REG_RBP,
     REG_RSP,
+
+    REG_XMM0,
+    REG_XMM1,
 } Register;
 
 typedef enum {
@@ -102,6 +112,14 @@ static void print_reg(File* stream, Register reg) {
     }
     case REG_RSP: {
         fprintf(stream, "rsp");
+        break;
+    }
+    case REG_XMM0: {
+        fprintf(stream, "xmm0");
+        break;
+    }
+    case REG_XMM1: {
+        fprintf(stream, "xmm1");
         break;
     }
     default: {

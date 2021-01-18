@@ -8,5 +8,6 @@ typedef struct {
 } Program;
 
 typedef i32 (*FnVoidI32)(void);
+typedef f32 (*FnVoidF32)(void);
 
 #endif
