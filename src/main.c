@@ -1406,7 +1406,7 @@ static void test_compile_5(Memory* memory) {
         set_bytes(memory);
         EXIT_IF(memory->bytes_index != 80);
         Program program = transform(memory);
-        f32 x = (*((FnVoidF32*)&program.buffer))();
+        f32     x = (*((FnVoidF32*)&program.buffer))();
         EXIT_IF(-1082130432 != *((i32*)(&x)));
         EXIT_IF(munmap(program.buffer, memory->bytes_index));
     }
