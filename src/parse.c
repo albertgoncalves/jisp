@@ -19,19 +19,19 @@ static Label* alloc_label(Memory* memory) {
 }
 
 #define UNEXPECTED_TOKEN(token)                                      \
-    {                                                                \
+    do {                                                             \
         fprintf(stderr, "%s:%s:%d\n", __FILE__, __func__, __LINE__); \
         print_token(stderr, token);                                  \
         exit(EXIT_FAILURE);                                          \
-    }
+    } while (0)
 
 #define EXPECTED_TOKEN(token_tag, memory, i) \
-    {                                        \
+    do {                                     \
         Token _ = pop_token(memory, i);      \
         if (_.tag != token_tag) {            \
             UNEXPECTED_TOKEN(_);             \
         }                                    \
-    }
+    } while (0)
 
 static void set_size_position(Inst* inst, u16* position, u16 size) {
     inst->size = size;

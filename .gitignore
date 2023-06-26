@@ -3,9 +3,13 @@
 !shell.nix
 !.shellhook
 !.clang-format
+
+!scripts/
+!*.sh
+
+!ex/
+!*.asm
+
 !src/
 !*.h
 !*.c
-!main
-!code/
-!*.asm

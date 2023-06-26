@@ -1,8 +1,6 @@
 with import <nixpkgs> {};
-pkgsMusl.mkShell {
+mkShell.override { stdenv = llvmPackages_14.stdenv; } {
     buildInputs = [
-        clang_10
-        cppcheck
         python3
         shellcheck
     ];

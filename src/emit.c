@@ -102,10 +102,10 @@ EMIT_1_BYTE(emit_ret, 0xC3)
 EMIT_1_VAR(emit_i32, i32) // NOTE: 4 bytes!
 
 #define CHECK_SIZE(memory, position, size)                 \
-    {                                                      \
+    do {                                                   \
         EXIT_IF((memory->bytes_index - position) != size); \
         position += size;                                  \
-    }
+    } while (0)
 
 static void set_bytes(Memory* memory) {
     usize position = 0;

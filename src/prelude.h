@@ -17,21 +17,31 @@ typedef double f64;
 typedef FILE File;
 
 #define ERROR()                                                      \
-    {                                                                \
+    do {                                                             \
         fprintf(stderr, "%s:%s:%d\n", __FILE__, __func__, __LINE__); \
         exit(EXIT_FAILURE);                                          \
-    }
+    } while (0)
 
-#define EXIT_IF(condition)         \
-    if (condition) {               \
-        fprintf(stderr,            \
-                "%s:%s:%d `%s`\n", \
-                __FILE__,          \
-                __func__,          \
-                __LINE__,          \
-                #condition);       \
-        exit(EXIT_FAILURE);        \
-    }
+#if 1
+    #define EXIT_IF(condition)             \
+        do {                               \
+            if (condition) {               \
+                fprintf(stderr,            \
+                        "%s:%s:%d `%s`\n", \
+                        __FILE__,          \
+                        __func__,          \
+                        __LINE__,          \
+                        #condition);       \
+                exit(EXIT_FAILURE);        \
+            }                              \
+        } while (0)
+#else
+    #define EXIT_IF(condition) \
+        do {                   \
+            if (condition) {   \
+            }                  \
+        } while (0)
+#endif
 
 #define PRINT_FN_OK() printf("%-20s OK\n", __func__)
 

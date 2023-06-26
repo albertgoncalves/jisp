@@ -161,10 +161,10 @@ static void print_arg(File* stream, Arg arg) {
 }
 
 #define UNEXPECTED_ARG(arg)                                          \
-    {                                                                \
+    do {                                                             \
         fprintf(stderr, "%s:%s:%d\n", __FILE__, __func__, __LINE__); \
         print_arg(stderr, arg);                                      \
         exit(EXIT_FAILURE);                                          \
-    }
+    } while (0)
 
 #endif

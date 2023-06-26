@@ -48,7 +48,7 @@ static void set_tokens(Memory* memory) {
         case '\t': {
             ++i;
             break;
-        };
+        }
         case '\n': {
             ++line;
             ++i;

@@ -25,7 +25,7 @@ static void test_compile_1(Memory* memory) {
                              "    mov     eax, ebx\n"
                              "    pop     rbx\n"
                              "    ret\n";
-        usize size = strlen(source);
+        usize       size = strlen(source);
         memcpy(memory->file, source, size);
         memory->file_index = size;
     }
@@ -220,7 +220,7 @@ static void test_compile_2(Memory* memory) {
                              "    mov     edi, 10\n"
                              "    call    f\n"
                              "    ret\n";
-        usize size = strlen(source);
+        usize       size = strlen(source);
         memcpy(memory->file, source, size);
         memory->file_index = size;
     }
@@ -526,7 +526,7 @@ static void test_compile_3(Memory* memory) {
                              "    mov     rsp, rbp\n"
                              "    pop     rbp\n"
                              "    ret\n";
-        usize size = strlen(source);
+        usize       size = strlen(source);
         memcpy(memory->file, source, size);
         memory->file_index = size;
     }
@@ -904,7 +904,7 @@ static void test_compile_3(Memory* memory) {
         EXIT_IF(insts[15].dst.reg != REG_RSP);
         EXIT_IF(insts[15].dst.addr_offset != 4);
         EXIT_IF(insts[15].dst.line != 18);
-        EXIT_IF(insts[15].src.imm_i32 != 45)
+        EXIT_IF(insts[15].src.imm_i32 != 45);
         EXIT_IF(insts[15].src.line != 18);
         EXIT_IF(insts[15].position != 42);
         EXIT_IF(insts[15].size != 11);
@@ -913,7 +913,7 @@ static void test_compile_3(Memory* memory) {
         EXIT_IF(insts[16].dst.reg != REG_RSP);
         EXIT_IF(insts[16].dst.addr_offset != 0);
         EXIT_IF(insts[16].dst.line != 19);
-        EXIT_IF(insts[16].src.imm_i32 != 99)
+        EXIT_IF(insts[16].src.imm_i32 != 99);
         EXIT_IF(insts[16].src.line != 19);
         EXIT_IF(insts[16].position != 53);
         EXIT_IF(insts[16].size != 11);
@@ -963,7 +963,7 @@ static void test_compile_4(Memory* memory) {
                              "    mov     eax, [rsp]\n"
                              "    add     rsp, 8\n"
                              "    ret\n";
-        usize size = strlen(source);
+        usize       size = strlen(source);
         memcpy(memory->file, source, size);
         memory->file_index = size;
     }
@@ -1058,7 +1058,7 @@ static void test_compile_4(Memory* memory) {
         EXIT_IF(insts[1].dst.reg != REG_RSP);
         EXIT_IF(insts[1].dst.addr_offset != 0);
         EXIT_IF(insts[1].dst.line != 2);
-        EXIT_IF(insts[1].src.imm_i32 != 1066192077)
+        EXIT_IF(insts[1].src.imm_i32 != 1066192077);
         EXIT_IF(insts[1].src.line != 2);
         EXIT_IF(insts[1].position != 7);
         EXIT_IF(insts[1].size != 11);
@@ -1111,7 +1111,7 @@ static void test_compile_5(Memory* memory) {
                              "    addss   xmm0, [rsp + 4]\n"
                              "    add     rsp, 8\n"
                              "    ret\n";
-        usize size = strlen(source);
+        usize       size = strlen(source);
         memcpy(memory->file, source, size);
         memory->file_index = size;
     }
@@ -1324,7 +1324,7 @@ static void test_compile_5(Memory* memory) {
         EXIT_IF(insts[1].dst.reg != REG_RSP);
         EXIT_IF(insts[1].dst.addr_offset != 4);
         EXIT_IF(insts[1].dst.line != 2);
-        EXIT_IF(insts[1].src.imm_i32 != 1065353216)
+        EXIT_IF(insts[1].src.imm_i32 != 1065353216);
         EXIT_IF(insts[1].src.line != 2);
         EXIT_IF(insts[1].position != 7);
         EXIT_IF(insts[1].size != 11);
@@ -1333,7 +1333,7 @@ static void test_compile_5(Memory* memory) {
         EXIT_IF(insts[2].dst.reg != REG_RSP);
         EXIT_IF(insts[2].dst.addr_offset != 0);
         EXIT_IF(insts[2].dst.line != 3);
-        EXIT_IF(insts[2].src.imm_i32 != -1077936128)
+        EXIT_IF(insts[2].src.imm_i32 != -1077936128);
         EXIT_IF(insts[2].src.line != 3);
         EXIT_IF(insts[2].position != 18);
         EXIT_IF(insts[2].size != 11);
@@ -1409,7 +1409,7 @@ static void test_compile_5(Memory* memory) {
         EXIT_IF(memory->bytes_index != 80);
         Program program = transform(memory);
         f32     x = (*((FnVoidF32*)&program.buffer))();
-        EXIT_IF((x < (-1.0 - EPSILON)) || ((-1.0 + EPSILON) < x));
+        EXIT_IF((x < (-1.0f - EPSILON)) || ((-1.0f + EPSILON) < x));
         EXIT_IF(munmap(program.buffer, memory->bytes_index));
     }
     reset(memory);
